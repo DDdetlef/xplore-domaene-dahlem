@@ -35,10 +35,22 @@
       .leaflet-popup-content { max-height: 64vh; }
       .leaflet-bar a { width: 34px; height: 34px; line-height: 34px; }
     }
+
+    /* Mobile full-screen popup overlay */
+    #mobile-popup { position: fixed; inset: 0; background: #fff; z-index: 10000; display: none; }
+    #mobile-popup .mp-header { display: flex; align-items: center; gap: 8px; padding: calc(8px + var(--safe-top)) 12px 8px 12px; border-bottom: 1px solid #e5e5e5; }
+    #mobile-popup .mp-header .mp-back { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: none; font: 16px system-ui, sans-serif; padding: 8px; color: #111; }
+    #mobile-popup .mp-body { padding: 12px; height: calc(100dvh - 56px - var(--safe-top) - var(--safe-bottom)); overflow-y: auto; }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div id="mobile-popup" aria-hidden="true">
+    <div class="mp-header">
+      <button id="mp-back" class="mp-back" aria-label="Zurück"><i class="fa fa-arrow-left"></i><span>Zurück</span></button>
+    </div>
+    <div class="mp-body" id="mp-body"></div>
+  </div>
   <div id="boot-log" style="position:fixed;left:8px;bottom:8px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 8px;border-radius:4px;font:12px system-ui;z-index:9999;display:none"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

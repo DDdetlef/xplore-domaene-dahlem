@@ -26,8 +26,60 @@ Eine schlanke Leaflet-App mit mobilen und redaktionellen Helfern für POIs der D
 - Edit-Modus: `index.html?edit=1` blendet Export/Import/Reload-Knöpfe ein.
 
 ## Daten (POIs)
-- Standard-Ladefolge: `data/poi.csv` (falls vorhanden), sonst `data/poi.geojson`.
-- CSV kann auch per URL gesetzt werden: `?csv=https://.../datei.csv`.
+
+### CSV → GeoJSON Konvertierung
+- Zweck: CSV-POIs in eine GeoJSON-FeatureCollection umwandeln für Hosting/Versionierung.
+- Skript: siehe `scripts/csv_to_geojson.ps1`.
+
+#### Voraussetzungen
+- Windows/PowerShell (oder `pwsh` plattformübergreifend).
+- CSV mit Semikolon (`;`) als Trennzeichen.
+- Für das Skript Koordinaten mit Dezimalpunkt (z. B. `52.457`). Die Web-App unterstützt zusätzlich Dezimal-Komma.
+
+#### Standardausführung
+- Im Projekt-Root wird `data/poi.geojson` aus `data/poi.csv` erzeugt:
+
+```powershell
+# Windows PowerShell
+./scripts/csv_to_geojson.ps1
+
+# Alternativ (PowerShell Core)
+pwsh -File ./scripts/csv_to_geojson.ps1
+```
+
+Wenn Skriptausführung deaktiviert ist (PSSecurityException), temporär für die Sitzung erlauben:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+Unblock-File -Path ./scripts/csv_to_geojson.ps1
+./scripts/csv_to_geojson.ps1
+```
+
+Oder einmalig ohne Änderung der Sitzung:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1
+```
+
+#### Eigene Pfade
+```powershell
+./scripts/csv_to_geojson.ps1 -CsvPath ./data/meine_pois.csv -OutPath ./data/meine_pois.geojson
+```
+
+#### Unterstützte Spalten
+- Koordinaten: `lat`/`latitude`/`y` und `lon`/`long`/`lng`/`x`/`longitude` (Auto-Swap bei vertauschten Werten).
+- Eigenschaften: `title`/`name`, `desc`/`description`, `address`, `hours`/`opening_hours`, `website`/`link`/`url`, `category`/`subject`, `tags`, `photos`/`images` (Listen per `;` oder `,`).
+
+#### Hinweise
+- Nach der Konvertierung lädt die App weiterhin bevorzugt `data/poi.csv`. Für GeoJSON-Nutzung CSV umbenennen/entfernen, damit `data/poi.geojson` geladen wird.
+- Bei Dezimal-Komma in Koordinaten vorab zu Dezimalpunkt konvertieren.
+- Das Skript gibt die Anzahl der geschriebenen Features aus.
+
+#### Schnell testen
+```powershell
+./scripts/csv_to_geojson.ps1
+Get-Item ./data/poi.geojson
+```
 
 ### CSV-Format
 - Trennzeichen: Semikolon `;` (Excel-Standard in DE). Dezimal-Komma wird unterstützt.

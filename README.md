@@ -1,85 +1,76 @@
-# xplore Domäne Dahlem
+# Xplore Domäne Dahlem
 
-Eine schlanke Leaflet-App mit:
-- Tile-Provider-Umschalter per URL (`?provider=...&apikey=...`) – mit Fallback auf OSM.
-- Begrenzung des Kartengebiets (BBox) und Min/Max-Zoom (`?bbox=minLon,minLat,maxLon,maxLat&minzoom=..&maxzoom=..`).
-- Einfacher Tile-Metrik-Anzeige (`?metrics=1`) zur Abschätzung der Sitzungs-Last.
-- Optionalem GeoJSON unter `data/poi.geojson`.
+Eine schlanke Leaflet-App mit mobilen und redaktionellen Helfern für POIs der Domäne Dahlem.
+
+## Features
+- Mobile Vollbild-Popup mit Zurück-Pfeil (Smartphones).
+- Kategorien-Filter als Burger-Menü (mobil einklappbar).
+- POIs aus CSV oder GeoJSON; CSV-Validator mit Bounds-Prüfung.
+- Präzise Begrenzung per `data/bounds.geojson` (Point-in-Polygon).
+- Robuste Koordinaten-Verarbeitung (Dezimal-Komma, Auto-Swap lat/lon).
+- Marker nach Kategorie mit Symbolen (Historie, Landwirtschaft, Wildtiere/Pflanzen).
+- Optionaler Tile-Provider per URL (`?provider=...&apikey=...`), Fallback OSM.
 
 ## Schnellstart
-- Öffne `index.html` lokal oder auf einem Webserver.
-  - https://dddetlef.github.io/xplore-domaene-dahlem/
-- Beispiele:
-  - OSM Standard: `index.html`
-  - OpenTopoMap: `index.html?provider=OpenTopoMap`
-  - Thunderforest (API-Key): `index.html?provider=Thunderforest.Outdoors&apikey=DEIN_KEY`
-  - BBox & Zoom: `index.html?bbox=13.27,52.44,13.31,52.47&minzoom=13&maxzoom=18`
-  - Metrik: `index.html?metrics=1`
-  ## Map View & Metriken
-  - HUD (bei `?metrics=1`) zeigt: geladene Tiles, eindeutige Tiles (Session), sichtbare Tiles (Viewport), Zoom.
-  - Ein Map View entspricht: 15 Raster-Tiles (256px) oder 4 Raster-512 Tiles.
-  - Die HUD schätzt die aktuellen Map Views im Viewport basierend auf der erkannten Tilegröße.
-  - Hinweis: Bei Retinageräten und verschiedenen Providern kann die reale Abrechnung abweichen.
-  - Dev-Overlay (BBox-Rahmen): `index.html?showbbox=1` (oder `&dev=1`)
-
-## BBox Domäne Dahlem
-- Standardmäßig wird die Karte auf die Domäne Dahlem gezoomt und auf deren BBox begrenzt.
-- Offizielle BBox (OSM/Nominatim, Reihenfolge `minLon,minLat,maxLon,maxLat`):
-  - `13.2877241,52.4581727,13.2898741,52.4601029`
-- Beispiel-URL, die diese BBox explizit setzt:
-  - `index.html?bbox=13.2877241,52.4581727,13.2898741,52.4601029&minzoom=15&maxzoom=19`
-
-## Polygon (Grenze) bearbeiten
-  - Polygone/Rechtecke zeichnen und bestehende Formen bearbeiten.
-  - Export: Button oben rechts (⤓) speichert die aktuelle Grenze als `bounds.geojson`.
-  - Import: Button oben rechts (📥) lädt eine lokale `bounds.geojson`/GeoJSON-Datei in die Karte.
-
-### Auto-Zoom
-- Beim Laden von `data/bounds.geojson` zoomt die Karte automatisch auf die enthaltene Geometrie.
+- Live-Demo: https://dddetlef.github.io/xplore-domaene-dahlem/
+- Lokal starten (benötigt einen einfachen Webserver):
+  - VS Code Erweiterung „Live Server“ oder
+  - Python 3:
+    ```powershell
+    python -m http.server 8080
+    ```
+  - Node.js:
+    ```powershell
+    npx serve . -p 8080
+    ```
+- Edit-Modus: `index.html?edit=1` blendet Export/Import/Reload-Knöpfe ein.
 
 ## Daten (POIs)
-- Lege deine Punkte in `data/poi.geojson` ab (GeoJSON FeatureCollection, Punkte als `[lon, lat]`).
-- Alternativ kannst du per CSV→GeoJSON konvertieren und die Datei hier ablegen.
+- Standard-Ladefolge: `data/poi.csv` (falls vorhanden), sonst `data/poi.geojson`.
+- CSV kann auch per URL gesetzt werden: `?csv=https://.../datei.csv`.
 
-### POI-Properties (Popup-Inhalt)
-- `title` oder `name`: Überschrift des POIs
-- `desc` oder `description`: kurzer Beschreibungstext
-- `address`: Adresse
-- `hours` oder `opening_hours`: Öffnungszeiten
-- `website` oder `link` oder `url`: externer Link
-- `tags`: Liste von Schlagworten
-- `photos` (Array) oder `images` (Array): Fotos
-  - Als String-Array: `["https://.../bild.jpg"]`
-  - Oder als Objekte: `[{"url":"https://...","label":"Hof"}]`
+### CSV-Format
+- Trennzeichen: Semikolon `;` (Excel-Standard in DE). Dezimal-Komma wird unterstützt.
+- Pflicht: `latitude`/`lat`/`y`, `longitude`/`lon`/`lng`/`x` (Reihenfolge egal; vertauschte Werte werden auto-korrigiert).
+- Optional (Popup-Inhalt):
+  - `subject`: Themenbereich/Kategorie-Label
+  - `title`/`name`: Titel
+  - `text`/`desc`/`description`: Beschreibung
+  - `funfact`: Fun Fact
+  - `image`: Bild-URL (wird auch als `photos[0]` genutzt)
+  - `link`/`url`/`website`: externer Link
+  - `category`: Kategorie (für Filter & Markerfarbe/Icon)
+- Absätze im Text: In Excel mit Alt+Enter Zeilenumbrüche setzen.
+  - 1 Umbruch = Zeilenumbruch, 2 Umbrüche (Leerzeile) = neuer Absatz.
 
-Beispiel siehe [data/poi.geojson](data/poi.geojson).
+### Marker & Kategorien
+- Farben: Historie = blau, Landwirtschaft = grün, Wildtiere/Pflanzen = dunkelgrün.
+- Symbole: Universität (Historie), Blatt (Landwirtschaft), Pfote (Wildtiere/Pflanzen).
+- Filter: Burger-Menü oben rechts; Vorauswahl per `?category=Historie,Landwirtschaft`.
 
-### CSV → GeoJSON Import
-- CSV-Datei kann im Edit-Modus über den Button „CSV“ geladen werden.
-- Alternativ wird beim Start automatisch `data/poi.csv` geladen (falls vorhanden) oder du gibst die URL per `?csv=https://.../datei.csv` an.
-- Erwartete Spalten (mindestens): `lat`, `lon` (oder Synonyme: `latitude`/`y`, `long`/`lng`/`x`).
-- Optionale Spalten werden zu Properties:
-  - `title`/`name`, `desc`/`description`, `address`, `hours`/`opening_hours`, `website`/`link`/`url`
-  - `category`/`subject`: Kategorie (für Filter)
-  - `tags`: mit `,` oder `;` getrennte Liste
-  - `photos`/`images`: mit `,` oder `;` getrennte URLs
-### Kategorien (Filter)
-- Auswahl oben rechts mit Mehrfachauswahl (Checkboxen) – dynamisch aus den Daten.
-- Vorbelegung via URL: `?category=Historie,Landwirtschaft` (Komma/Strichpunkt getrennt).
-- Kategorie kommt aus `properties.category` (CSV: Spalte `category` oder `subject`).
+## Grenzen (`bounds.geojson`)
+- Beim Laden von `data/bounds.geojson` wird die Karte auf die Geometrie gezoomt.
+- CSV-Validator prüft Punkte auf „innerhalb der Grenze“ (Polygon/Holes unterstützt).
+- Edit-Modus (`?edit=1`):
+  - Zeichnen/Bearbeiten (Leaflet Draw),
+  - Export (⤓) speichert `bounds.geojson`,
+  - Import (📥) lädt eine lokale GeoJSON/`bounds.geojson`.
+  - POI-CSV Import (CSV) und POI-GeoJSON Export (⤓POI).
+  - Reload-Button lädt CSV/GeoJSON neu mit Cache-Busting.
 
-Markerfarben:
-- Historie: blau
-- Landwirtschaft: braun
-- Wildtiere & -pflanzen: dunkelgrün
-- Nach dem Import werden Marker erzeugt; per „⤓POI“ kannst du die Daten als `poi.geojson` exportieren.
+## URL-Parameter (optional)
+- `provider=OpenTopoMap` oder `Thunderforest.Outdoors&apikey=DEIN_KEY`
+- `csv=https://.../datei.csv`
+- `category=Historie;Landwirtschaft`
+- `minzoom=..&maxzoom=..`
+- `bbox=minLon,minLat,maxLon,maxLat`
+- `metrics=1` zeigt eine einfache Tile-Metrik-HUD.
 
 ## Hosting
 - GitHub Pages: Repo → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
-- WordPress: Statisch ausliefern, z. B. unter `/wp-content/uploads/xplore/`.
-- Für produktive Nutzung nutze dedizierte Tile-Provider (MapTiler, Stadia, Thunderforest) oder Self-Hosting.
+- Statisches Hosting (z. B. WordPress Uploads) ist ebenfalls möglich.
 
 ## Hinweise
-- HTTPS: notwendig für Kamera/Sensorfunktionen.
-- Attribution: OSM/Provider-Credits sichtbar lassen.
-- API-Keys: Nicht committen; per Build/Server injizieren oder URL nur temporär nutzen.
+- OSM/Provider-Credits sichtbar lassen (Attribution).
+- API-Keys nicht committen; per Server/ENV oder temporär in der URL.
+- HTTPS empfohlen.

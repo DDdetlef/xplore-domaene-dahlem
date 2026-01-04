@@ -59,6 +59,7 @@ const maxZoomMap = maxZoomParamMap ? Math.max(0, Math.min(22, parseInt(maxZoomPa
 if (typeof minZoom === 'number') map.setMinZoom(minZoom);
 if (typeof maxZoomMap === 'number') map.setMaxZoom(maxZoomMap);
 let activeBounds = null;
+let boundaryGeoJSON = null; // precise polygon for containment checks
 if (bbox) {
   activeBounds = bbox;
   map.setMaxBounds(activeBounds);
@@ -220,6 +221,95 @@ function parseCSVToGeoJSON(text) {
   });
   return { type: 'FeatureCollection', features };
 }
+
+// CSV validator: filters invalid rows and summarizes issues
+function parseCSVValidated(text) {
+  const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ';' }) : { data: [] };
+  const rows = result.data || [];
+  const features = [];
+  const issues = [];
+  function num(v) { return parseFloat(String(v || '').replace(',', '.')); }
+  function maybeSwap(lat, lon) {
+    if (!isFinite(lat) || !isFinite(lon)) return [lat, lon];
+    const looksSwapped = Math.abs(lat) <= 35 && Math.abs(lon) >= 35;
+    return looksSwapped ? [lon, lat] : [lat, lon];
+  }
+  function ptInRing(lon, lat, ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0], yi = ring[i][1];
+      const xj = ring[j][0], yj = ring[j][1];
+      const intersect = ((yi > lat) !== (yj > lat)) &&
+                        (lon < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-12) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+  function ptInPolygon(lon, lat, geom) {
+    if (!geom) return false;
+    if (geom.type === 'Polygon') {
+      const rings = geom.coordinates || [];
+      if (!rings.length) return false;
+      const insideOuter = ptInRing(lon, lat, rings[0]);
+      if (!insideOuter) return false;
+      for (let k = 1; k < rings.length; k++) { if (ptInRing(lon, lat, rings[k])) return false; }
+      return true;
+    }
+    if (geom.type === 'MultiPolygon') {
+      const polys = geom.coordinates || [];
+      for (const poly of polys) {
+        const rings = poly || [];
+        if (!rings.length) continue;
+        const insideOuter = ptInRing(lon, lat, rings[0]);
+        if (!insideOuter) continue;
+        let inHole = false;
+        for (let k = 1; k < rings.length; k++) { if (ptInRing(lon, lat, rings[k])) { inHole = true; break; } }
+        if (!inHole) return true;
+      }
+      return false;
+    }
+    return false;
+  }
+  function withinBounds(lat, lon) {
+    try {
+      if (boundaryGeoJSON && boundaryGeoJSON.features && boundaryGeoJSON.features.length) {
+        for (const f of boundaryGeoJSON.features) {
+          const g = f && f.geometry;
+          if (g && ptInPolygon(lon, lat, g)) return true;
+        }
+        return false;
+      }
+      const ll = L.latLng(lat, lon);
+      if (activeBounds && activeBounds.contains) return activeBounds.contains(ll);
+      return lat > 52 && lat < 53 && lon > 13 && lon < 14;
+    } catch (_) { return true; }
+  }
+  rows.forEach((row, idx) => {
+    const get = (k) => row[k] || (k ? row[k.toLowerCase()] : '') || '';
+    let lat = num(get('latitude') || get('lat') || get('y'));
+    let lon = num(get('longitude') || get('lon') || get('long') || get('lng') || get('x'));
+    [lat, lon] = maybeSwap(lat, lon);
+    if (!isFinite(lat) || !isFinite(lon)) { issues.push({ row: idx + 2, reason: 'Missing/invalid coordinates' }); return; }
+    if (!withinBounds(lat, lon)) { issues.push({ row: idx + 2, reason: 'Coordinates outside bounds' }); return; }
+    const props = {};
+    const category = get('category') || '';
+    const subject = get('subject') || '';
+    const title = get('title') || get('name') || '';
+    const text = get('text') || get('desc') || get('description') || '';
+    const funfact = get('funfact') || '';
+    const image = get('image') || '';
+    const link = get('link') || get('website') || get('url') || '';
+    if (category) props.category = category;
+    if (subject) props.subject = subject;
+    if (title) props.title = title;
+    if (text) props.text = text;
+    if (funfact) props.funfact = funfact;
+    if (image) { props.image = image; props.photos = [{ url: image }]; }
+    if (link) props.link = link;
+    features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
+  });
+  return { fc: { type: 'FeatureCollection', features }, stats: { valid: features.length, invalid: issues.length, issues } };
+}
 function renderPOIFeatureCollection(fc) {
   poiLayer.clearLayers();
   poiMarkers.length = 0;
@@ -281,10 +371,12 @@ function reloadPOIs(opts) {
     const u = cacheBust(url);
     return fetch(u).then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
       .then(text => {
-        const fc = parseCSVToGeoJSON(text);
+        const res = parseCSVValidated(text);
+        const fc = res.fc;
         if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('csv empty');
         renderPOIFeatureCollection(fc);
-        if (toast) showToast('POIs reloaded');
+        if (toast) showToast(`POIs reloaded (${res.stats.valid} ok, ${res.stats.invalid} invalid)`);
+        if (res.stats.invalid) console.warn('CSV issues:', res.stats.issues);
         return true;
       });
   }
@@ -430,6 +522,7 @@ function buildOrUpdateCategoryControl(categories) {
     if (!r.ok) throw new Error('bounds.geojson not found');
     return r.json();
   }).then(gj => {
+    boundaryGeoJSON = gj;
     const layer = L.geoJSON(gj, { style: { color: '#2a7', weight: 2, fillOpacity: 0.08 } });
     layer.addTo(group);
     try {
@@ -568,7 +661,8 @@ function buildOrUpdateCategoryControl(categories) {
             const reader = new FileReader();
             reader.onload = function (e) {
               try {
-                const fc = parseCSVToGeoJSON(String(e.target.result));
+                const res = parseCSVValidated(String(e.target.result));
+                const fc = res.fc;
                 poiLayer.clearLayers();
                 const markers = [];
                 fc.features.forEach(feat => {
@@ -583,6 +677,8 @@ function buildOrUpdateCategoryControl(categories) {
                   const g = L.featureGroup(markers);
                   map.fitBounds(g.getBounds(), { padding: [20, 20] });
                 }
+                showToast(`CSV imported (${res.stats.valid} ok, ${res.stats.invalid} invalid)`);
+                if (res.stats.invalid) console.warn('CSV issues:', res.stats.issues);
               } catch (err) {
                 console.warn('Failed to import CSV as GeoJSON', err);
               }

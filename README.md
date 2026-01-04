@@ -96,7 +96,7 @@ Get-Item ./data/poi.geojson
   - 1 Umbruch = Zeilenumbruch, 2 Umbrüche (Leerzeile) = neuer Absatz.
 
 ### Marker & Kategorien
-- Farben: Historie = blau, Landwirtschaft = grün, Wildtiere/Pflanzen = dunkelgrün.
+- Farben: Historie = blau, Landwirtschaft = orange, Wildtiere/Pflanzen = dunkelgrün.
 - Symbole: Universität (Historie), Blatt (Landwirtschaft), Pfote (Wildtiere/Pflanzen).
 - Filter: Burger-Menü oben rechts; Vorauswahl per `?category=Historie,Landwirtschaft`.
 

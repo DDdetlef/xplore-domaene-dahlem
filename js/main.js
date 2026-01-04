@@ -342,8 +342,9 @@ function renderPOIFeatureCollection(fc) {
       return 'black';
     }
     const color = categoryToColor(props.category);
+    const maxW = Math.min(360, Math.floor(window.innerWidth * 0.92));
     const popupOpts = {
-      maxWidth: 360,
+      maxWidth: maxW,
       autoPan: true,
       keepInView: true,
       autoPanPaddingTopLeft: L.point(30, 120),
@@ -421,6 +422,11 @@ function buildOrUpdateCategoryControl(categories) {
       wrap.style.padding = '6px';
       wrap.style.background = 'rgba(255,255,255,0.9)';
       wrap.style.maxWidth = '220px';
+      if (window.innerWidth < 520) {
+        wrap.style.maxWidth = '70vw';
+        wrap.style.maxHeight = '40vh';
+        wrap.style.overflowY = 'auto';
+      }
       const title = L.DomUtil.create('div', '', wrap);
       title.textContent = 'Kategorie';
       function categoryToIcon(cat) {

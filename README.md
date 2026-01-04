@@ -40,6 +40,19 @@ Eine schlanke Leaflet-App mit:
 - Lege deine Punkte in `data/poi.geojson` ab (GeoJSON FeatureCollection, Punkte als `[lon, lat]`).
 - Alternativ kannst du per CSV→GeoJSON konvertieren und die Datei hier ablegen.
 
+### POI-Properties (Popup-Inhalt)
+- `title` oder `name`: Überschrift des POIs
+- `desc` oder `description`: kurzer Beschreibungstext
+- `address`: Adresse
+- `hours` oder `opening_hours`: Öffnungszeiten
+- `website` oder `link` oder `url`: externer Link
+- `tags`: Liste von Schlagworten
+- `photos` (Array) oder `images` (Array): Fotos
+  - Als String-Array: `["https://.../bild.jpg"]`
+  - Oder als Objekte: `[{"url":"https://...","label":"Hof"}]`
+
+Beispiel siehe [data/poi.geojson](data/poi.geojson).
+
 ## Hosting
 - GitHub Pages: Repo → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
 - WordPress: Statisch ausliefern, z. B. unter `/wp-content/uploads/xplore/`.

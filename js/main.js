@@ -131,13 +131,46 @@ fetch('data/poi.geojson').then(r => {
   return r.json();
 }).then(fc => {
   if (!fc || !Array.isArray(fc.features)) return;
+  function esc(s) {
+    return String(s || '').replace(/[&<>"]+/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  }
+  function buildPhotos(props) {
+    const p = props.photos || props.images || [];
+    if (!Array.isArray(p) || p.length === 0) return '';
+    const items = p.map((x) => {
+      const url = typeof x === 'string' ? x : String(x && x.url || '');
+      const label = typeof x === 'string' ? '' : String(x && (x.label || x.title || ''));
+      if (!url) return '';
+      return `<a class="foto-icon" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}"><i class="fa fa-camera"></i></a>`;
+    }).filter(Boolean).join('');
+    if (!items) return '';
+    return `<div class="popup-fotos">${items}</div>`;
+  }
+  function buildPoiPopupContent(f) {
+    const props = f && f.properties ? f.properties : {};
+    const title = props.title || props.name || 'POI';
+    const desc = props.desc || props.description || '';
+    const address = props.address || '';
+    const hours = props.hours || props.opening_hours || '';
+    const website = props.link || props.url || props.website || '';
+    const tags = Array.isArray(props.tags) ? props.tags : [];
+    const lines = [];
+    if (address) lines.push(`<div>${esc(address)}</div>`);
+    if (hours) lines.push(`<div>${esc(hours)}</div>`);
+    if (tags.length) lines.push(`<div>${esc(tags.join(', '))}</div>`);
+    const photos = buildPhotos(props);
+    const linkHtml = website ? `<div><a href="${esc(website)}" target="_blank" rel="noopener">Mehr Infos</a></div>` : '';
+    const meta = lines.length ? `<div>${lines.join('')}</div>` : '';
+    const body = desc ? `<p>${esc(desc)}</p>` : '';
+    return `<div><h3>${esc(title)}</h3>${meta}${body}${photos}${linkHtml}</div>`;
+  }
   const markers = [];
   fc.features.forEach((f) => {
     if (!f || !f.geometry || f.geometry.type !== 'Point') return;
     const c = f.geometry.coordinates;
     if (!Array.isArray(c) || c.length < 2) return;
     const latlng = L.latLng(c[1], c[0]);
-    const m = L.marker(latlng).bindPopup(String(f.properties && f.properties.title || 'POI'));
+    const m = L.marker(latlng).bindPopup(buildPoiPopupContent(f));
     m.addTo(map);
     markers.push(m);
   });

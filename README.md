@@ -8,6 +8,7 @@ Eine schlanke Leaflet-App mit:
 
 ## Schnellstart
 - Öffne `index.html` lokal oder auf einem Webserver.
+  - https://dddetlef.github.io/xplore-domaene-dahlem/
 - Beispiele:
   - OSM Standard: `index.html`
   - OpenTopoMap: `index.html?provider=OpenTopoMap`

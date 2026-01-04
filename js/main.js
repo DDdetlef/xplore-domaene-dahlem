@@ -254,11 +254,13 @@ function renderPOIFeatureCollection(fc) {
   buildOrUpdateCategoryControl(Array.from(catSet).sort());
 }
 
-// Load POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
-(function loadPOIs() {
+// Load/Reload POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
+function reloadPOIs() {
   const csvParam = getQueryParam('csv');
+  const cacheBust = (u) => u ? (u + (u.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now()) : u;
   function tryCSV(url) {
-    return fetch(url).then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
+    const u = cacheBust(url);
+    return fetch(u).then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
       .then(text => {
         const fc = parseCSVToGeoJSON(text);
         if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('csv empty');
@@ -267,13 +269,16 @@ function renderPOIFeatureCollection(fc) {
       });
   }
   function tryGeoJSON() {
-    return fetch('data/poi.geojson').then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
+    const u = cacheBust('data/poi.geojson');
+    return fetch(u).then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
       .then(fc => { if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty'); renderPOIFeatureCollection(fc); return true; });
   }
   const chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
                          : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
-  chain.catch(() => { /* neither CSV nor GeoJSON present; keep default view */ });
-})();
+  return chain.catch(() => { /* neither CSV nor GeoJSON present; keep default view */ });
+}
+// Initial load
+reloadPOIs();
 
 function applyCategoryFilterFromSet() {
   const wantAll = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => v.toLowerCase() === 'alle');
@@ -577,6 +582,23 @@ function buildOrUpdateCategoryControl(categories) {
         }
       });
       map.addControl(new PoiCSVControl());
+
+      // Reload POIs control (editorial view)
+      const ReloadPOIsControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+          const container = L.DomUtil.create('div', 'leaflet-bar');
+          const btn = L.DomUtil.create('a', '', container);
+          btn.href = '#';
+          btn.title = 'Reload POIs';
+          btn.textContent = '↻POI';
+          L.DomEvent.on(btn, 'click', L.DomEvent.stopPropagation)
+                    .on(btn, 'click', L.DomEvent.preventDefault)
+                    .on(btn, 'click', function () { try { reloadPOIs(); } catch (_) {} });
+          return container;
+        }
+      });
+      map.addControl(new ReloadPOIsControl());
     }
   });
 })();

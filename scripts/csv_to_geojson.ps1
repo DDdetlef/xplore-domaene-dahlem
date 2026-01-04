@@ -46,8 +46,12 @@ foreach ($row in $rows) {
   $props = @{}
   $title = GetVal $row @('title','name')
   if ($title) { $props.title = $title }
+  $title_en = GetVal $row @('title_en','name_en')
+  if ($title_en) { $props.title_en = $title_en }
   $desc = GetVal $row @('desc','description')
   if ($desc) { $props.desc = $desc }
+  $desc_en = GetVal $row @('desc_en','description_en','text_en')
+  if ($desc_en) { $props.desc_en = $desc_en }
   $address = GetVal $row @('address')
   if ($address) { $props.address = $address }
   $hours = GetVal $row @('hours','opening_hours')
@@ -56,6 +60,8 @@ foreach ($row in $rows) {
   if ($website) { $props.website = $website }
   $category = GetVal $row @('category','subject')
   if ($category) { $props.category = $category }
+  $subject_en = GetVal $row @('subject_en')
+  if ($subject_en) { $props.subject_en = $subject_en }
   $tagsS = GetVal $row @('tags')
   if ($tagsS) { $props.tags = SplitList $tagsS }
   $photosS = GetVal $row @('photos','images')
@@ -64,6 +70,10 @@ foreach ($row in $rows) {
     $props.photos = @()
     foreach ($u in $urls) { $props.photos += @{ url = $u } }
   }
+  $funfact = GetVal $row @('funfact')
+  if ($funfact) { $props.funfact = $funfact }
+  $funfact_en = GetVal $row @('funfact_en')
+  if ($funfact_en) { $props.funfact_en = $funfact_en }
 
   $feature = @{ type = 'Feature'; properties = $props; geometry = @{ type = 'Point'; coordinates = @($lon, $lat) } }
   $features += $feature

@@ -95,6 +95,15 @@ Get-Item ./data/poi.geojson
 - Absätze im Text: In Excel mit Alt+Enter Zeilenumbrüche setzen.
   - 1 Umbruch = Zeilenumbruch, 2 Umbrüche (Leerzeile) = neuer Absatz.
 
+#### Mehrsprachige Inhalte (DE/EN)
+- Sprachauswahl: über UI-Umschalter oben rechts oder `?lang=en`.
+- Zusätzliche Spalten für Englisch werden unterstützt (Fallback auf Deutsch, falls leer):
+  - `subject_en`: Themenbereich/Kategorie-Label (EN)
+  - `title_en`/`name_en`: Titel (EN)
+  - `text_en`/`desc_en`/`description_en`: Beschreibung (EN)
+  - `funfact_en`: Fun Fact (EN)
+- `image`/`photos` und `link` sind in der Regel sprachneutral; bei Bedarf können Sie `link_en` ergänzen und ich kann die App entsprechend erweitern.
+
 ### Marker & Kategorien
 - Farben: Historie = blau, Landwirtschaft = orange, Wildtiere/Pflanzen = dunkelgrün.
 - Symbole: Universität (Historie), Blatt (Landwirtschaft), Pfote (Wildtiere/Pflanzen).

@@ -211,10 +211,11 @@ function formatTextToHTML(raw) {
 }
 function buildPoiPopupContent(f) {
   const props = f && f.properties ? f.properties : {};
-  const subject = props.subject || '';
-  const title = props.title || props.name || '';
-  const text = props.text || props.desc || props.description || '';
-  const funfact = props.funfact || '';
+  function pickLang(deVal, enVal) { return currentLang === 'en' ? (enVal || deVal || '') : (deVal || enVal || ''); }
+  const subject = pickLang(props.subject || '', props.subject_en || '');
+  const title = pickLang(props.title || props.name || '', props.title_en || props.name_en || '');
+  const text = pickLang(props.text || props.desc || props.description || '', props.text_en || props.desc_en || props.description_en || '');
+  const funfact = pickLang(props.funfact || '', props.funfact_en || '');
   const image = props.image || '';
   const link = props.link || props.url || props.website || '';
 
@@ -278,16 +279,24 @@ function parseCSVToGeoJSON(text) {
     const props = {};
     const category = get('category') || '';
     const subject = get('subject') || '';
+    const subject_en = get('subject_en') || '';
     const title = get('title') || get('name') || '';
+    const title_en = get('title_en') || get('name_en') || '';
     const text = get('text') || get('desc') || get('description') || '';
+    const text_en = get('text_en') || get('desc_en') || get('description_en') || '';
     const funfact = get('funfact') || '';
+    const funfact_en = get('funfact_en') || '';
     const image = get('image') || '';
     const link = get('link') || get('website') || get('url') || '';
     if (category) props.category = category;
     if (subject) props.subject = subject;
+    if (subject_en) props.subject_en = subject_en;
     if (title) props.title = title;
+    if (title_en) props.title_en = title_en;
     if (text) props.text = text;
+    if (text_en) props.text_en = text_en;
     if (funfact) props.funfact = funfact;
+    if (funfact_en) props.funfact_en = funfact_en;
     if (image) { props.image = image; props.photos = [{ url: image }]; }
     if (link) props.link = link;
     features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
@@ -367,16 +376,24 @@ function parseCSVValidated(text) {
     const props = {};
     const category = get('category') || '';
     const subject = get('subject') || '';
+    const subject_en = get('subject_en') || '';
     const title = get('title') || get('name') || '';
+    const title_en = get('title_en') || get('name_en') || '';
     const text = get('text') || get('desc') || get('description') || '';
+    const text_en = get('text_en') || get('desc_en') || get('description_en') || '';
     const funfact = get('funfact') || '';
+    const funfact_en = get('funfact_en') || '';
     const image = get('image') || '';
     const link = get('link') || get('website') || get('url') || '';
     if (category) props.category = category;
     if (subject) props.subject = subject;
+    if (subject_en) props.subject_en = subject_en;
     if (title) props.title = title;
+    if (title_en) props.title_en = title_en;
     if (text) props.text = text;
+    if (text_en) props.text_en = text_en;
     if (funfact) props.funfact = funfact;
+    if (funfact_en) props.funfact_en = funfact_en;
     if (image) { props.image = image; props.photos = [{ url: image }]; }
     if (link) props.link = link;
     features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });

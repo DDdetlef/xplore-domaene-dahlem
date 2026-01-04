@@ -52,6 +52,7 @@ function setLanguage(lang) {
     // Close mobile popup if open to avoid stale content
     closeMobilePopup();
   } catch (_) {}
+  try { map.closePopup && map.closePopup(); } catch (_) {}
   try {
     poiMarkers.forEach(m => {
       const f = m && m.feature;
@@ -76,6 +77,21 @@ function setLanguage(lang) {
         }
       }
     });
+  } catch (_) {}
+  // Reopen last clicked marker popup with updated content
+  try {
+    if (lastClickedMarker && lastClickedMarker.feature) {
+      const content = buildPoiPopupContent(lastClickedMarker.feature);
+      if (isMobile()) {
+        openMobilePopup(content);
+      } else if (lastClickedMarker.openPopup) {
+        // Ensure content is up to date before reopening
+        if (lastClickedMarker.getPopup && lastClickedMarker.getPopup()) {
+          lastClickedMarker.getPopup().setContent(content);
+        }
+        lastClickedMarker.openPopup();
+      }
+    }
   } catch (_) {}
 }
 
@@ -207,6 +223,7 @@ function showToast(msg) {
 // Layer group for POIs (markers) to allow import/export
 const poiLayer = L.featureGroup().addTo(map);
 const poiMarkers = [];
+let lastClickedMarker = null;
 let selectedCategories = new Set();
 function parseInitialCategories() {
   const raw = getQueryParam('category');
@@ -478,8 +495,9 @@ function renderPOIFeatureCollection(fc) {
     }
     const content = buildPoiPopupContent(f);
     if (isMobile()) {
-      m.on('click', () => openMobilePopup(content));
+      m.on('click', () => { lastClickedMarker = m; openMobilePopup(content); });
     } else {
+      m.on('click', () => { lastClickedMarker = m; });
       m.bindPopup(content, popupOpts);
     }
     m.addTo(poiLayer);

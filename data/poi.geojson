@@ -1,40 +1,19 @@
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "title": "Domäne Dahlem Museum",
-        "address": "Königin-Luise-Straße 49, 14195 Berlin",
-        "hours": "Di–So 10–18 Uhr",
-        "desc": "Freilichtmuseum für Landwirtschaft und Ernährung mit historischem Gutshof.",
-        "website": "https://www.domaene-dahlem.de/",
-        "tags": ["Museum", "Freilichtmuseum", "Landwirtschaft"],
-        "photos": [
-          {"url": "https://example.com/foto1.jpg", "label": "Hof"},
-          {"url": "https://example.com/foto2.jpg", "label": "Ausstellung"}
-        ]
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [13.2889, 52.4596]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "title": "Hofladen Domäne Dahlem",
-        "address": "Königin-Luise-Straße 49, 14195 Berlin",
-        "hours": "Mo–Sa 10–18 Uhr",
-        "desc": "Regionale Produkte und Erzeugnisse direkt vom Gut.",
-        "link": "https://www.domaene-dahlem.de/hofladen/",
-        "tags": ["Laden", "Regional"],
-        "images": ["https://example.com/laden.jpg"]
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [13.2892, 52.4592]
-      }
-    }
-  ]
+﻿{
+    "features":  [
+                     {
+                         "properties":  {
+                                            "website":  "https://www.domaene-dahlem.de/einblicke-in-das-leben-der-stadtgreife-auf-der-domaene/",
+                                            "title":  "Naturnaher Teich"
+                                        },
+                         "type":  "Feature",
+                         "geometry":  {
+                                          "coordinates":  [
+                                                              13.28891485508052,
+                                                              52.462077796695553
+                                                          ],
+                                          "type":  "Point"
+                                      }
+                     }
+                 ],
+    "type":  "FeatureCollection"
 }

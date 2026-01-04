@@ -13,6 +13,32 @@
                                                           ],
                                           "type":  "Point"
                                       }
+                     },
+                     {
+                         "properties":  {
+                                            "title":  "Rund um die Kartoffel"
+                                        },
+                         "type":  "Feature",
+                         "geometry":  {
+                                          "coordinates":  [
+                                                              13.291818094990214,
+                                                              52.4628620835821
+                                                          ],
+                                          "type":  "Point"
+                                      }
+                     },
+                     {
+                         "properties":  {
+                                            "title":  "Zwangsarbeiter auf der Domäne Dahlem"
+                                        },
+                         "type":  "Feature",
+                         "geometry":  {
+                                          "coordinates":  [
+                                                              13.289952206320637,
+                                                              52.459613619043573
+                                                          ],
+                                          "type":  "Point"
+                                      }
                      }
                  ],
     "type":  "FeatureCollection"

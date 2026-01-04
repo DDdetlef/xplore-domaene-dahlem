@@ -164,6 +164,15 @@ function buildPhotos(props) {
   if (!items) return '';
   return `<div class=\"popup-fotos\">${items}</div>`;
 }
+
+// Convert plain text with line breaks into HTML paragraphs.
+// Rule: double line break (blank line) → new paragraph; single line break → <br>
+function formatTextToHTML(raw) {
+  const s = String(raw || '');
+  if (!s) return '';
+  const paras = s.split(/\n{2,}/);
+  return paras.map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+}
 function buildPoiPopupContent(f) {
   const props = f && f.properties ? f.properties : {};
   const subject = props.subject || '';
@@ -176,7 +185,7 @@ function buildPoiPopupContent(f) {
   const parts = [];
   if (subject) parts.push(`<div><strong>${esc(subject)}</strong></div>`);
   if (title) parts.push(`<h3 style=\"margin:4px 0\">${esc(title)}</h3>`);
-  if (text) parts.push(`<p>${esc(text)}</p>`);
+  if (text) parts.push(formatTextToHTML(text));
   if (funfact) parts.push(`<div><strong>Fun Fact:</strong> ${esc(funfact)}</div>`);
   if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\"/></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]

@@ -117,6 +117,7 @@ Get-Item ./data/poi.geojson
 - `minzoom=..&maxzoom=..`
 - `bbox=minLon,minLat,maxLon,maxLat`
 - `metrics=1` zeigt eine einfache Tile-Metrik-HUD.
+- `lang=en` schaltet die UI auf Englisch (DE/EN Umschalter oben rechts).
 
 ## Hosting
 - GitHub Pages: Repo → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.

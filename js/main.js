@@ -15,6 +15,42 @@ function getQueryParam(name) {
   return v ? v.trim() : '';
 }
 
+// Simple i18n (DE/EN)
+const LANGS = ['de', 'en'];
+function detectLanguage() {
+  try {
+    const q = getQueryParam('lang');
+    const stored = localStorage.getItem('lang') || '';
+    const doc = (document.documentElement && document.documentElement.lang) || 'de';
+    const cand = (q || stored || doc || 'de').toLowerCase().slice(0, 2);
+    return LANGS.includes(cand) ? cand : 'de';
+  } catch (_) { return 'de'; }
+}
+let currentLang = detectLanguage();
+function t(key) {
+  const dict = {
+    de: { back: 'Zurück', filter: 'Filter', category: 'Kategorie', all: 'Alle', funfact_label: 'Fun Fact:', more_info: 'Mehr Infos' },
+    en: { back: 'Back',   filter: 'Filter', category: 'Category', all: 'All',  funfact_label: 'Fun fact:', more_info: 'More info' }
+  };
+  const d = dict[currentLang] || dict.de;
+  return d[key] || key;
+}
+function setLanguage(lang) {
+  if (!LANGS.includes(lang)) return;
+  currentLang = lang;
+  try { localStorage.setItem('lang', lang); } catch (_) {}
+  try { document.documentElement.lang = lang; } catch (_) {}
+  const backBtn = document.getElementById('mp-back');
+  if (backBtn) {
+    backBtn.setAttribute('aria-label', t('back'));
+    const sp = backBtn.querySelector('span');
+    if (sp) sp.textContent = t('back');
+  }
+  try { if (Array.isArray(lastCategoryList) && lastCategoryList.length) buildOrUpdateCategoryControl(lastCategoryList); } catch (_) {}
+}
+
+let lastCategoryList = [];
+
 function parseBboxParam() {
   const raw = getQueryParam('bbox'); // minLon,minLat,maxLon,maxLat
   if (!raw) return null;
@@ -186,11 +222,11 @@ function buildPoiPopupContent(f) {
   if (subject) parts.push(`<div><strong>${esc(subject)}</strong></div>`);
   if (title) parts.push(`<h3 style=\"margin:4px 0\">${esc(title)}</h3>`);
   if (text) parts.push(formatTextToHTML(text));
-  if (funfact) parts.push(`<div><strong>Fun Fact:</strong> ${esc(funfact)}</div>`);
+  if (funfact) parts.push(`<div><strong>${esc(t('funfact_label'))}</strong> ${esc(funfact)}</div>`);
   if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\"/></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]
   if (photos) parts.push(photos);
-  if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">Mehr Infos</a></div>`);
+  if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">${esc(t('more_info'))}</a></div>`);
   const html = parts.join('');
   return `<div>${html}</div>`;
 }
@@ -219,6 +255,9 @@ function closeMobilePopup() {
 if (mobilePopupBackEl) {
   mobilePopupBackEl.addEventListener('click', () => closeMobilePopup());
 }
+
+// Initialize language-dependent UI text (back button)
+setLanguage(currentLang);
 
 // Parse CSV to GeoJSON (top-level), recognizing subject, title, text, funfact, image, link
 function parseCSVToGeoJSON(text) {
@@ -406,7 +445,9 @@ function renderPOIFeatureCollection(fc) {
     const g = L.featureGroup(markers);
     map.fitBounds(g.getBounds(), { padding: [20, 20] });
   }
-  buildOrUpdateCategoryControl(Array.from(catSet).sort());
+  const cats = Array.from(catSet).sort();
+  lastCategoryList = cats;
+  buildOrUpdateCategoryControl(cats);
 }
 
 // Load/Reload POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
@@ -440,7 +481,10 @@ function reloadPOIs(opts) {
 reloadPOIs();
 
 function applyCategoryFilterFromSet() {
-  const wantAll = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => v.toLowerCase() === 'alle');
+  const wantAll = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => {
+    const s = String(v).toLowerCase();
+    return s === 'alle' || s === 'all';
+  });
   poiMarkers.forEach(m => {
     const props = (m.feature && m.feature.properties) || {};
     const mc = String(props.category || '').trim().toLowerCase();
@@ -465,17 +509,28 @@ function buildOrUpdateCategoryControl(categories) {
       header.style.background = 'rgba(255,255,255,0.9)';
       const toggle = L.DomUtil.create('a', '', header);
       toggle.href = '#';
-      toggle.title = 'Filter';
-      toggle.setAttribute('aria-label', 'Filter');
+      toggle.title = t('filter');
+      toggle.setAttribute('aria-label', t('filter'));
       toggle.style.width = '34px';
       toggle.style.height = '34px';
       toggle.style.lineHeight = '34px';
       toggle.style.textAlign = 'center';
       toggle.innerHTML = '<i class="fa fa-bars"></i>';
       const headerText = L.DomUtil.create('span', '', header);
-      headerText.textContent = ' Filter';
+      headerText.textContent = ' ' + t('filter');
       headerText.style.padding = '0 8px';
       headerText.style.userSelect = 'none';
+
+      // Language selector (DE/EN)
+      const langSel = L.DomUtil.create('select', '', header);
+      langSel.style.marginLeft = 'auto';
+      langSel.style.marginRight = '6px';
+      langSel.style.height = '28px';
+      const optDe = document.createElement('option'); optDe.value = 'de'; optDe.textContent = 'DE';
+      const optEn = document.createElement('option'); optEn.value = 'en'; optEn.textContent = 'EN';
+      langSel.appendChild(optDe); langSel.appendChild(optEn);
+      langSel.value = currentLang;
+      L.DomEvent.on(langSel, 'change', function () { setLanguage(langSel.value); });
 
       const wrap = L.DomUtil.create('div', '', container);
       wrap.style.padding = '6px';
@@ -500,7 +555,7 @@ function buildOrUpdateCategoryControl(categories) {
                 });
 
       const title = L.DomUtil.create('div', '', wrap);
-      title.textContent = 'Kategorie';
+      title.textContent = t('category');
       function categoryToIcon(cat) {
         const s = String(cat || '').toLowerCase();
         if (s === 'historie') return 'university';
@@ -518,7 +573,7 @@ function buildOrUpdateCategoryControl(categories) {
       const allId = 'cat_all';
       const allLabel = L.DomUtil.create('label', '', wrap);
       const allCb = document.createElement('input'); allCb.type = 'checkbox'; allCb.id = allId;
-      const allSpan = document.createElement('span'); allSpan.textContent = ' Alle';
+      const allSpan = document.createElement('span'); allSpan.textContent = ' ' + t('all');
       allLabel.style.display = 'flex';
       allLabel.style.alignItems = 'center';
       allLabel.style.margin = '2px 0';
@@ -552,7 +607,7 @@ function buildOrUpdateCategoryControl(categories) {
         });
       });
       // Initialize "Alle" checkbox based on empty selection
-      allCb.checked = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => v.toLowerCase() === 'alle');
+      allCb.checked = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => { const s = String(v).toLowerCase(); return s === 'alle' || s === 'all'; });
       L.DomEvent.on(allCb, 'change', function () {
         if (allCb.checked) {
           selectedCategories.clear();

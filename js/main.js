@@ -191,9 +191,15 @@ function parseCSVToGeoJSON(text) {
   const rows = result.data || [];
   const features = [];
   rows.forEach(row => {
-    const get = (k) => row[k] || row[k && k.toLowerCase()] || '';
-    const lat = parseFloat(get('latitude') || get('lat') || get('y'));
-    const lon = parseFloat(get('longitude') || get('lon') || get('long') || get('lng') || get('x'));
+    const get = (k) => row[k] || (k ? row[k.toLowerCase()] : '') || '';
+    function num(v) { return parseFloat(String(v || '').replace(',', '.')); }
+    let lat = num(get('latitude') || get('lat') || get('y'));
+    let lon = num(get('longitude') || get('lon') || get('long') || get('lng') || get('x'));
+    // Auto-fix swapped coordinates (common issue: lat=13, lon=52 → Berlin)
+    if (isFinite(lat) && isFinite(lon)) {
+      const looksSwapped = Math.abs(lat) <= 35 && Math.abs(lon) >= 35;
+      if (looksSwapped) { const tmp = lat; lat = lon; lon = tmp; }
+    }
     if (!isFinite(lat) || !isFinite(lon)) return;
     const props = {};
     const category = get('category') || '';

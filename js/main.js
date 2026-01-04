@@ -186,7 +186,7 @@ function renderPOIFeatureCollection(fc) {
     function categoryToColor(cat) {
       const s = String(cat || '').toLowerCase();
       if (s === 'historie') return 'blue';
-      if (s === 'landwirtschaft') return 'brown';
+      if (s === 'landwirtschaft') return 'green';
       if (s.indexOf('wildtiere') !== -1) return 'darkgreen';
       return 'cadetblue';
     }

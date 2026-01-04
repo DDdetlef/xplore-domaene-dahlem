@@ -2,8 +2,9 @@
     "features":  [
                      {
                          "properties":  {
-                                            "website":  "https://www.domaene-dahlem.de/einblicke-in-das-leben-der-stadtgreife-auf-der-domaene/",
-                                            "title":  "Naturnaher Teich"
+                                            "title":  "Naturnaher Teich",
+                                            "category":  "Wildtiere \u0026 -pflanzen",
+                                            "website":  "https://www.domaene-dahlem.de/einblicke-in-das-leben-der-stadtgreife-auf-der-domaene/"
                                         },
                          "type":  "Feature",
                          "geometry":  {
@@ -16,6 +17,7 @@
                      },
                      {
                          "properties":  {
+                                            "category":  "Landwirtschaft",
                                             "title":  "Rund um die Kartoffel"
                                         },
                          "type":  "Feature",
@@ -29,6 +31,7 @@
                      },
                      {
                          "properties":  {
+                                            "category":  "Historie",
                                             "title":  "Zwangsarbeiter auf der Domäne Dahlem"
                                         },
                          "type":  "Feature",

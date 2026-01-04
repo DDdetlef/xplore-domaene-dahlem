@@ -54,6 +54,8 @@ foreach ($row in $rows) {
   if ($hours) { $props.hours = $hours }
   $website = GetVal $row @('website','link','url')
   if ($website) { $props.website = $website }
+  $category = GetVal $row @('category','subject')
+  if ($category) { $props.category = $category }
   $tagsS = GetVal $row @('tags')
   if ($tagsS) { $props.tags = SplitList $tagsS }
   $photosS = GetVal $row @('photos','images')

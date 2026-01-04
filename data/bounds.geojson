@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Domäne Dahlem Bounds"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Domäne Dahlem Bounds"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              13.288436,
+              52.464808
+            ],
+            [
+              13.287792,
+              52.46371
+            ],
+            [
+              13.287063,
+              52.458258
+            ],
+            [
+              13.29041,
+              52.458141
+            ],
+            [
+              13.291998,
+              52.462181
+            ],
+            [
+              13.293822,
+              52.46358
+            ],
+            [
+              13.288436,
+              52.464808
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -186,6 +186,31 @@ function buildPoiPopupContent(f) {
   return `<div>${html}</div>`;
 }
 
+// Mobile full-screen popup overlay helpers
+const mobilePopupEl = document.getElementById('mobile-popup');
+const mobilePopupBodyEl = document.getElementById('mp-body');
+const mobilePopupBackEl = document.getElementById('mp-back');
+function isMobile() {
+  try { return window.matchMedia && window.matchMedia('(max-width: 480px)').matches; } catch (_) { return (window.innerWidth || 800) <= 480; }
+}
+function openMobilePopup(html) {
+  if (!mobilePopupEl || !mobilePopupBodyEl) return;
+  mobilePopupBodyEl.innerHTML = html;
+  mobilePopupEl.style.display = 'block';
+  mobilePopupEl.setAttribute('aria-hidden', 'false');
+  try { document.body.style.overflow = 'hidden'; } catch (_) {}
+}
+function closeMobilePopup() {
+  if (!mobilePopupEl || !mobilePopupBodyEl) return;
+  mobilePopupEl.style.display = 'none';
+  mobilePopupEl.setAttribute('aria-hidden', 'true');
+  mobilePopupBodyEl.innerHTML = '';
+  try { document.body.style.overflow = ''; } catch (_) {}
+}
+if (mobilePopupBackEl) {
+  mobilePopupBackEl.addEventListener('click', () => closeMobilePopup());
+}
+
 // Parse CSV to GeoJSON (top-level), recognizing subject, title, text, funfact, image, link
 function parseCSVToGeoJSON(text) {
   const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ';' }) : { data: [] };
@@ -356,7 +381,12 @@ function renderPOIFeatureCollection(fc) {
     } else {
       m = L.marker(latlng);
     }
-    m.bindPopup(buildPoiPopupContent(f), popupOpts);
+    const content = buildPoiPopupContent(f);
+    if (isMobile()) {
+      m.on('click', () => openMobilePopup(content));
+    } else {
+      m.bindPopup(content, popupOpts);
+    }
     m.addTo(poiLayer);
     m.feature = f;
     markers.push(m);
@@ -418,6 +448,26 @@ function buildOrUpdateCategoryControl(categories) {
     options: { position: 'topright' },
     onAdd: function () {
       const container = L.DomUtil.create('div', 'leaflet-bar');
+
+      // Header with burger toggle (mobile collapsible)
+      const header = L.DomUtil.create('div', '', container);
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.background = 'rgba(255,255,255,0.9)';
+      const toggle = L.DomUtil.create('a', '', header);
+      toggle.href = '#';
+      toggle.title = 'Filter';
+      toggle.setAttribute('aria-label', 'Filter');
+      toggle.style.width = '34px';
+      toggle.style.height = '34px';
+      toggle.style.lineHeight = '34px';
+      toggle.style.textAlign = 'center';
+      toggle.innerHTML = '<i class="fa fa-bars"></i>';
+      const headerText = L.DomUtil.create('span', '', header);
+      headerText.textContent = ' Filter';
+      headerText.style.padding = '0 8px';
+      headerText.style.userSelect = 'none';
+
       const wrap = L.DomUtil.create('div', '', container);
       wrap.style.padding = '6px';
       wrap.style.background = 'rgba(255,255,255,0.9)';
@@ -426,7 +476,20 @@ function buildOrUpdateCategoryControl(categories) {
         wrap.style.maxWidth = '70vw';
         wrap.style.maxHeight = '40vh';
         wrap.style.overflowY = 'auto';
+        wrap.style.display = 'none'; // collapsed by default on mobile
+        toggle.setAttribute('aria-expanded', 'false');
+      } else {
+        wrap.style.display = 'block';
+        toggle.setAttribute('aria-expanded', 'true');
       }
+      L.DomEvent.on(toggle, 'click', L.DomEvent.stopPropagation)
+                .on(toggle, 'click', L.DomEvent.preventDefault)
+                .on(toggle, 'click', function () {
+                  const isHidden = wrap.style.display === 'none';
+                  wrap.style.display = isHidden ? 'block' : 'none';
+                  toggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                });
+
       const title = L.DomUtil.create('div', '', wrap);
       title.textContent = 'Kategorie';
       function categoryToIcon(cat) {
@@ -682,7 +745,13 @@ function buildOrUpdateCategoryControl(categories) {
                   const c = feat.geometry && feat.geometry.coordinates;
                   if (!c || c.length < 2) return;
                   const latlng = L.latLng(c[1], c[0]);
-                  const m = L.marker(latlng).bindPopup(buildPoiPopupContent(feat));
+                  const m = L.marker(latlng);
+                  const content = buildPoiPopupContent(feat);
+                  if (isMobile()) {
+                    m.on('click', () => openMobilePopup(content));
+                  } else {
+                    m.bindPopup(content);
+                  }
                   m.addTo(poiLayer);
                   markers.push(m);
                 });

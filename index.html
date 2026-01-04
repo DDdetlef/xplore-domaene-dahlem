@@ -23,6 +23,8 @@
       #map { height: 100vh; }
     }
     .leaflet-popup-content { overflow-wrap: anywhere; word-break: break-word; max-height: 56vh; overflow-y: auto; }
+      /* Ensure last line isn't clipped at bottom when scrolled */
+      .leaflet-popup-content { padding-bottom: 16px; }
     .popup-fotos { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
     .popup-fotos .foto-icon { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; background: #ff0084; color: #fff; border-radius: 4px; text-decoration: none; }
     .popup-fotos .foto-icon .fa { font-size: 16px; line-height: 1; }
@@ -32,7 +34,7 @@
     /* Mobile tweaks */
     @media (max-width: 480px) {
       .leaflet-popup { width: min(92vw, 360px); }
-      .leaflet-popup-content { max-height: 64vh; }
+        .leaflet-popup-content { max-height: 64vh; }
       .leaflet-bar a { width: 34px; height: 34px; line-height: 34px; }
     }
 

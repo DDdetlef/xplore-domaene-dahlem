@@ -190,7 +190,7 @@ function buildPoiPopupContent(f) {
   if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\"/></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]
   if (photos) parts.push(photos);
-  if (link) parts.push(`<div style=\"margin-top:6px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">Mehr Infos</a></div>`);
+  if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">Mehr Infos</a></div>`);
   const html = parts.join('');
   return `<div>${html}</div>`;
 }

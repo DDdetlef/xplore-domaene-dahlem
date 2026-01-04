@@ -47,6 +47,36 @@ function setLanguage(lang) {
     if (sp) sp.textContent = t('back');
   }
   try { if (Array.isArray(lastCategoryList) && lastCategoryList.length) buildOrUpdateCategoryControl(lastCategoryList); } catch (_) {}
+  // Refresh existing marker popups and mobile click handlers to reflect new language
+  try {
+    // Close mobile popup if open to avoid stale content
+    closeMobilePopup();
+  } catch (_) {}
+  try {
+    poiMarkers.forEach(m => {
+      const f = m && m.feature;
+      if (!f) return;
+      const content = buildPoiPopupContent(f);
+      if (isMobile()) {
+        try { m.off('click'); } catch (_) {}
+        m.on('click', () => openMobilePopup(content));
+      } else {
+        if (m.getPopup && m.getPopup()) {
+          try { m.getPopup().setContent(content); } catch (_) {}
+        } else {
+          const maxW = Math.min(360, Math.floor(window.innerWidth * 0.92));
+          const popupOpts = {
+            maxWidth: maxW,
+            autoPan: true,
+            keepInView: true,
+            autoPanPaddingTopLeft: L.point(30, 120),
+            autoPanPaddingBottomRight: L.point(30, 50)
+          };
+          try { m.bindPopup(content, popupOpts); } catch (_) {}
+        }
+      }
+    });
+  } catch (_) {}
 }
 
 let lastCategoryList = [];

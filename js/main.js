@@ -177,7 +177,7 @@ function buildPoiPopupContent(f) {
   if (subject) parts.push(`<div><strong>${esc(subject)}</strong></div>`);
   if (title) parts.push(`<h3 style=\"margin:4px 0\">${esc(title)}</h3>`);
   if (text) parts.push(`<p>${esc(text)}</p>`);
-  if (funfact) parts.push(`<div><strong>Funfact:</strong> ${esc(funfact)}</div>`);
+  if (funfact) parts.push(`<div><strong>Fun Fact:</strong> ${esc(funfact)}</div>`);
   if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\"/></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]
   if (photos) parts.push(photos);

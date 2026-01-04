@@ -153,23 +153,54 @@ function buildPhotos(props) {
 }
 function buildPoiPopupContent(f) {
   const props = f && f.properties ? f.properties : {};
-  const title = props.title || props.name || 'POI';
-  const desc = props.desc || props.description || '';
-  const address = props.address || '';
-  const hours = props.hours || props.opening_hours || '';
-  const website = props.link || props.url || props.website || '';
-  const category = props.category || '';
-  const tags = Array.isArray(props.tags) ? props.tags : [];
-  const lines = [];
-  if (address) lines.push(`<div>${esc(address)}</div>`);
-  if (hours) lines.push(`<div>${esc(hours)}</div>`);
-  if (category) lines.push(`<div><strong>Kategorie:</strong> ${esc(category)}</div>`);
-  if (tags.length) lines.push(`<div>${esc(tags.join(', '))}</div>`);
-  const photos = buildPhotos(props);
-  const linkHtml = website ? `<div><a href=\"${esc(website)}\" target=\"_blank\" rel=\"noopener\">Mehr Infos</a></div>` : '';
-  const meta = lines.length ? `<div>${lines.join('')}</div>` : '';
-  const body = desc ? `<p>${esc(desc)}</p>` : '';
-  return `<div><h3>${esc(title)}</h3>${meta}${body}${photos}${linkHtml}</div>`;
+  const subject = props.subject || '';
+  const title = props.title || props.name || '';
+  const text = props.text || props.desc || props.description || '';
+  const funfact = props.funfact || '';
+  const image = props.image || '';
+  const link = props.link || props.url || props.website || '';
+
+  const parts = [];
+  if (subject) parts.push(`<div><strong>${esc(subject)}</strong></div>`);
+  if (title) parts.push(`<h3 style=\"margin:4px 0\">${esc(title)}</h3>`);
+  if (text) parts.push(`<p>${esc(text)}</p>`);
+  if (funfact) parts.push(`<div><strong>Funfact:</strong> ${esc(funfact)}</div>`);
+  if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\"/></div>`);
+  const photos = buildPhotos(props); // still supports optional photos[]
+  if (photos) parts.push(photos);
+  if (link) parts.push(`<div style=\"margin-top:6px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">Mehr Infos</a></div>`);
+  const html = parts.join('');
+  return `<div>${html}</div>`;
+}
+
+// Parse CSV to GeoJSON (top-level), recognizing subject, title, text, funfact, image, link
+function parseCSVToGeoJSON(text) {
+  const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ';' }) : { data: [] };
+  const rows = result.data || [];
+  const features = [];
+  rows.forEach(row => {
+    const get = (k) => row[k] || row[k && k.toLowerCase()] || '';
+    const lat = parseFloat(get('latitude') || get('lat') || get('y'));
+    const lon = parseFloat(get('longitude') || get('lon') || get('long') || get('lng') || get('x'));
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    const props = {};
+    const category = get('category') || '';
+    const subject = get('subject') || '';
+    const title = get('title') || get('name') || '';
+    const text = get('text') || get('desc') || get('description') || '';
+    const funfact = get('funfact') || '';
+    const image = get('image') || '';
+    const link = get('link') || get('website') || get('url') || '';
+    if (category) props.category = category;
+    if (subject) props.subject = subject;
+    if (title) props.title = title;
+    if (text) props.text = text;
+    if (funfact) props.funfact = funfact;
+    if (image) { props.image = image; props.photos = [{ url: image }]; }
+    if (link) props.link = link;
+    features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
+  });
+  return { type: 'FeatureCollection', features };
 }
 function renderPOIFeatureCollection(fc) {
   poiLayer.clearLayers();
@@ -192,13 +223,6 @@ function renderPOIFeatureCollection(fc) {
     }
     function categoryToIcon(cat) {
       const s = String(cat || '').toLowerCase();
-      // Historie → Gebäude-Icon
-      if (s === 'historie') return 'university';
-      // Landwirtschaft → Pflanzen-Icon
-      if (s === 'landwirtschaft') return 'leaf';
-      // Wildtier & -pflanze → Tier-Icon
-    function categoryToIcon(cat) {
-      const s = String(cat || '').toLowerCase();
       if (s === 'historie') return 'university';
       if (s === 'landwirtschaft') return 'leaf';
       if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'paw';
@@ -206,18 +230,12 @@ function renderPOIFeatureCollection(fc) {
     }
     function categoryToIconColor(cat) {
       const s = String(cat || '').toLowerCase();
-      // Teardrop stays colored via markerColor; icon color for readability
       if (s === 'historie') return 'white';
-      // For Landwirtschaft and Wildtiere & -pflanzen, keep inner icon neutral
       return 'black';
-    }
-      if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'paw';
-      // Fallback
-      const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color, iconColor: categoryToIconColor(props.category) });
     }
     const color = categoryToColor(props.category);
     if (L.AwesomeMarkers && L.AwesomeMarkers.icon) {
-      const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color });
+      const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color, iconColor: categoryToIconColor(props.category) });
       m = L.marker(latlng, { icon });
     } else {
       m = L.marker(latlng);
@@ -501,37 +519,7 @@ function buildOrUpdateCategoryControl(categories) {
       }
 
       function parseCSVToGeoJSON(text) {
-        const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true }) : { data: [] };
-        const rows = result.data || [];
-        const features = [];
-        rows.forEach(row => {
-          const get = (k) => row[k] || row[k.toLowerCase()] || '';
-          const lat = parseFloat(get('lat') || get('latitude') || get('y'));
-          const lon = parseFloat(get('lon') || get('long') || get('lng') || get('x'));
-          if (!isFinite(lat) || !isFinite(lon)) return;
-          const props = {};
-          const title = get('title') || get('name');
-          const desc = get('desc') || get('description');
-          const address = get('address');
-          const hours = get('hours') || get('opening_hours');
-          const website = get('website') || get('link') || get('url');
-              const category = get('category') || get('subject');
-          const tagsRaw = get('tags');
-          const photosRaw = get('photos') || get('images');
-          if (title) props.title = title;
-          if (desc) props.desc = desc;
-          if (address) props.address = address;
-          if (hours) props.hours = hours;
-          if (website) props.website = website;
-          if (category) props.category = category;
-          if (tagsRaw) props.tags = String(tagsRaw).split(/[;,]/).map(s => s.trim()).filter(Boolean);
-          if (photosRaw) {
-            const arr = String(photosRaw).split(/[;,]/).map(s => s.trim()).filter(Boolean);
-            props.photos = arr.map(u => ({ url: u }));
-          }
-          features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
-        });
-        return { type: 'FeatureCollection', features };
+        return window.parseCSVToGeoJSON ? window.parseCSVToGeoJSON(text) : { type: 'FeatureCollection', features: [] };
       }
 
       const PoiCSVControl = L.Control.extend({

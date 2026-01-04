@@ -587,6 +587,15 @@ function buildOrUpdateCategoryControl(categories) {
         if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return '#006400'; // darkgreen
         return '#5f9ea0'; // cadetblue
       }
+      function categoryToLabel(cat) {
+        const s = String(cat || '').toLowerCase();
+        if (currentLang === 'en') {
+          if (s === 'historie') return 'History';
+          if (s === 'landwirtschaft') return 'Agriculture';
+          if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'Wildlife';
+        }
+        return cat;
+      }
       const allId = 'cat_all';
       const allLabel = L.DomUtil.create('label', '', wrap);
       const allCb = document.createElement('input'); allCb.type = 'checkbox'; allCb.id = allId;
@@ -604,7 +613,7 @@ function buildOrUpdateCategoryControl(categories) {
         const id = 'cat_' + btoa(unescape(encodeURIComponent(cat))).replace(/[^A-Za-z0-9]/g,'');
         const label = document.createElement('label');
         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = id; cb.value = cat;
-        const span = document.createElement('span'); span.textContent = ' ' + cat;
+        const span = document.createElement('span'); span.textContent = ' ' + categoryToLabel(cat);
         label.style.display = 'flex';
         label.style.alignItems = 'center';
         label.style.margin = '2px 0';

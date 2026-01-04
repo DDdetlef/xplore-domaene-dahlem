@@ -125,6 +125,18 @@ if (enableMetrics && baseLayer) {
   renderHud();
 }
 
+// Simple toast utility using #boot-log element
+function showToast(msg) {
+  try {
+    const el = document.getElementById('boot-log');
+    if (!el) return;
+    el.textContent = String(msg || '');
+    el.style.display = 'block';
+    if (el._hideTimer) clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => { try { el.style.display = 'none'; } catch (_) {} }, 2000);
+  } catch (_) {}
+}
+
 // Layer group for POIs (markers) to allow import/export
 const poiLayer = L.featureGroup().addTo(map);
 const poiMarkers = [];
@@ -255,7 +267,8 @@ function renderPOIFeatureCollection(fc) {
 }
 
 // Load/Reload POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
-function reloadPOIs() {
+function reloadPOIs(opts) {
+  const toast = !!(opts && opts.toast);
   const csvParam = getQueryParam('csv');
   const cacheBust = (u) => u ? (u + (u.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now()) : u;
   function tryCSV(url) {
@@ -265,17 +278,18 @@ function reloadPOIs() {
         const fc = parseCSVToGeoJSON(text);
         if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('csv empty');
         renderPOIFeatureCollection(fc);
+        if (toast) showToast('POIs reloaded');
         return true;
       });
   }
   function tryGeoJSON() {
     const u = cacheBust('data/poi.geojson');
     return fetch(u).then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
-      .then(fc => { if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty'); renderPOIFeatureCollection(fc); return true; });
+      .then(fc => { if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty'); renderPOIFeatureCollection(fc); if (toast) showToast('POIs reloaded'); return true; });
   }
   const chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
                          : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
-  return chain.catch(() => { /* neither CSV nor GeoJSON present; keep default view */ });
+  return chain.catch((err) => { if (toast) showToast('Reload failed'); /* neither CSV nor GeoJSON present; keep default view */ });
 }
 // Initial load
 reloadPOIs();
@@ -594,7 +608,7 @@ function buildOrUpdateCategoryControl(categories) {
           btn.textContent = '↻POI';
           L.DomEvent.on(btn, 'click', L.DomEvent.stopPropagation)
                     .on(btn, 'click', L.DomEvent.preventDefault)
-                    .on(btn, 'click', function () { try { reloadPOIs(); } catch (_) {} });
+                    .on(btn, 'click', function () { try { reloadPOIs({ toast: true }); } catch (_) {} });
           return container;
         }
       });

@@ -1,6 +1,6 @@
 // xplore Domäne Dahlem - Leaflet app with provider switch, bbox/zoom limits, and tile metrics
 
-const map = L.map('map');
+const map = L.map('map', { maxBoundsViscosity: 0.8 });
 
 // Default BBox for Domäne Dahlem (from OSM Nominatim)
 // Format: L.latLngBounds([minLat, minLon], [maxLat, maxLon])
@@ -345,8 +345,9 @@ function renderPOIFeatureCollection(fc) {
     const popupOpts = {
       maxWidth: 360,
       autoPan: true,
-      autoPanPaddingTopLeft: L.point(30, 60),
-      autoPanPaddingBottomRight: L.point(30, 30)
+      keepInView: true,
+      autoPanPaddingTopLeft: L.point(30, 120),
+      autoPanPaddingBottomRight: L.point(30, 50)
     };
     if (L.AwesomeMarkers && L.AwesomeMarkers.icon) {
       const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color, iconColor: categoryToIconColor(props.category) });
@@ -535,8 +536,8 @@ function buildOrUpdateCategoryControl(categories) {
       const b = layer.getBounds && layer.getBounds();
       if (b && b.isValid && b.isValid()) {
         activeBounds = b;
-        // Clamp map movement to the polygon bounds (with a tiny pad)
-        map.setMaxBounds(b.pad(0.001));
+        // Clamp map movement to the polygon bounds with a generous pad
+        map.setMaxBounds(b.pad(0.02));
         // Add extra top padding to ensure the polygon isn't clipped by controls
         map.fitBounds(b, { paddingTopLeft: [20, 60], paddingBottomRight: [20, 20] });
         // Ensure proper sizing if assets changed layout

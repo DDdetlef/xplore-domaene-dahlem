@@ -125,62 +125,234 @@ if (enableMetrics && baseLayer) {
   renderHud();
 }
 
-// Load optional sample data if present
-fetch('data/poi.geojson').then(r => {
-  if (!r.ok) return Promise.reject(new Error('poi.geojson not found'));
-  return r.json();
-}).then(fc => {
-  if (!fc || !Array.isArray(fc.features)) return;
-  function esc(s) {
-    return String(s || '').replace(/[&<>"]+/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-  }
-  function buildPhotos(props) {
-    const p = props.photos || props.images || [];
-    if (!Array.isArray(p) || p.length === 0) return '';
-    const items = p.map((x) => {
-      const url = typeof x === 'string' ? x : String(x && x.url || '');
-      const label = typeof x === 'string' ? '' : String(x && (x.label || x.title || ''));
-      if (!url) return '';
-      return `<a class="foto-icon" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}"><i class="fa fa-camera"></i></a>`;
-    }).filter(Boolean).join('');
-    if (!items) return '';
-    return `<div class="popup-fotos">${items}</div>`;
-  }
-  function buildPoiPopupContent(f) {
-    const props = f && f.properties ? f.properties : {};
-    const title = props.title || props.name || 'POI';
-    const desc = props.desc || props.description || '';
-    const address = props.address || '';
-    const hours = props.hours || props.opening_hours || '';
-    const website = props.link || props.url || props.website || '';
-    const tags = Array.isArray(props.tags) ? props.tags : [];
-    const lines = [];
-    if (address) lines.push(`<div>${esc(address)}</div>`);
-    if (hours) lines.push(`<div>${esc(hours)}</div>`);
-    if (tags.length) lines.push(`<div>${esc(tags.join(', '))}</div>`);
-    const photos = buildPhotos(props);
-    const linkHtml = website ? `<div><a href="${esc(website)}" target="_blank" rel="noopener">Mehr Infos</a></div>` : '';
-    const meta = lines.length ? `<div>${lines.join('')}</div>` : '';
-    const body = desc ? `<p>${esc(desc)}</p>` : '';
-    return `<div><h3>${esc(title)}</h3>${meta}${body}${photos}${linkHtml}</div>`;
-  }
+// Layer group for POIs (markers) to allow import/export
+const poiLayer = L.featureGroup().addTo(map);
+const poiMarkers = [];
+let selectedCategories = new Set();
+function parseInitialCategories() {
+  const raw = getQueryParam('category');
+  if (!raw) return;
+  raw.split(/[;,]/).map(s => s.trim()).filter(Boolean).forEach(s => selectedCategories.add(s));
+}
+parseInitialCategories();
+
+function esc(s) {
+  return String(s || '').replace(/[&<>"]+/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+function buildPhotos(props) {
+  const p = props.photos || props.images || [];
+  if (!Array.isArray(p) || p.length === 0) return '';
+  const items = p.map((x) => {
+    const url = typeof x === 'string' ? x : String(x && x.url || '');
+    const label = typeof x === 'string' ? '' : String(x && (x.label || x.title || ''));
+    if (!url) return '';
+    return `<a class=\"foto-icon\" href=\"${esc(url)}\" target=\"_blank\" rel=\"noopener\" title=\"${esc(label)}\"><i class=\"fa fa-camera\"></i></a>`;
+  }).filter(Boolean).join('');
+  if (!items) return '';
+  return `<div class=\"popup-fotos\">${items}</div>`;
+}
+function buildPoiPopupContent(f) {
+  const props = f && f.properties ? f.properties : {};
+  const title = props.title || props.name || 'POI';
+  const desc = props.desc || props.description || '';
+  const address = props.address || '';
+  const hours = props.hours || props.opening_hours || '';
+  const website = props.link || props.url || props.website || '';
+  const category = props.category || '';
+  const tags = Array.isArray(props.tags) ? props.tags : [];
+  const lines = [];
+  if (address) lines.push(`<div>${esc(address)}</div>`);
+  if (hours) lines.push(`<div>${esc(hours)}</div>`);
+  if (category) lines.push(`<div><strong>Kategorie:</strong> ${esc(category)}</div>`);
+  if (tags.length) lines.push(`<div>${esc(tags.join(', '))}</div>`);
+  const photos = buildPhotos(props);
+  const linkHtml = website ? `<div><a href=\"${esc(website)}\" target=\"_blank\" rel=\"noopener\">Mehr Infos</a></div>` : '';
+  const meta = lines.length ? `<div>${lines.join('')}</div>` : '';
+  const body = desc ? `<p>${esc(desc)}</p>` : '';
+  return `<div><h3>${esc(title)}</h3>${meta}${body}${photos}${linkHtml}</div>`;
+}
+function renderPOIFeatureCollection(fc) {
+  poiLayer.clearLayers();
+  poiMarkers.length = 0;
   const markers = [];
-  fc.features.forEach((f) => {
+  const catSet = new Set();
+  (fc.features || []).forEach((f) => {
     if (!f || !f.geometry || f.geometry.type !== 'Point') return;
     const c = f.geometry.coordinates;
     if (!Array.isArray(c) || c.length < 2) return;
     const latlng = L.latLng(c[1], c[0]);
-    const m = L.marker(latlng).bindPopup(buildPoiPopupContent(f));
-    m.addTo(map);
+    let m;
+    const props = (f && f.properties) || {};
+    function categoryToColor(cat) {
+      const s = String(cat || '').toLowerCase();
+      if (s === 'historie') return 'blue';
+      if (s === 'landwirtschaft') return 'brown';
+      if (s.indexOf('wildtiere') !== -1) return 'darkgreen';
+      return 'cadetblue';
+    }
+    function categoryToIcon(cat) {
+      const s = String(cat || '').toLowerCase();
+      // Historie → Gebäude-Icon
+      if (s === 'historie') return 'university';
+      // Landwirtschaft → Pflanzen-Icon
+      if (s === 'landwirtschaft') return 'leaf';
+      // Wildtier & -pflanze → Tier-Icon
+    function categoryToIcon(cat) {
+      const s = String(cat || '').toLowerCase();
+      if (s === 'historie') return 'university';
+      if (s === 'landwirtschaft') return 'leaf';
+      if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'paw';
+      return 'map-marker';
+    }
+    function categoryToIconColor(cat) {
+      const s = String(cat || '').toLowerCase();
+      // Teardrop stays colored via markerColor; icon color for readability
+      if (s === 'historie') return 'white';
+      // For Landwirtschaft and Wildtiere & -pflanzen, keep inner icon neutral
+      return 'black';
+    }
+      if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'paw';
+      // Fallback
+      const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color, iconColor: categoryToIconColor(props.category) });
+    }
+    const color = categoryToColor(props.category);
+    if (L.AwesomeMarkers && L.AwesomeMarkers.icon) {
+      const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color });
+      m = L.marker(latlng, { icon });
+    } else {
+      m = L.marker(latlng);
+    }
+    m.bindPopup(buildPoiPopupContent(f));
+    m.addTo(poiLayer);
+    m.feature = f;
     markers.push(m);
+    poiMarkers.push(m);
+    if (props.category) catSet.add(String(props.category).trim());
   });
   if (markers.length > 0 && !bbox) {
     const g = L.featureGroup(markers);
     map.fitBounds(g.getBounds(), { padding: [20, 20] });
   }
-}).catch(() => {
-  // No sample data; keep default view
-});
+  buildOrUpdateCategoryControl(Array.from(catSet).sort());
+}
+
+// Load POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
+(function loadPOIs() {
+  const csvParam = getQueryParam('csv');
+  function tryCSV(url) {
+    return fetch(url).then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
+      .then(text => {
+        const fc = parseCSVToGeoJSON(text);
+        if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('csv empty');
+        renderPOIFeatureCollection(fc);
+        return true;
+      });
+  }
+  function tryGeoJSON() {
+    return fetch('data/poi.geojson').then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
+      .then(fc => { if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty'); renderPOIFeatureCollection(fc); return true; });
+  }
+  const chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
+                         : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
+  chain.catch(() => { /* neither CSV nor GeoJSON present; keep default view */ });
+})();
+
+function applyCategoryFilterFromSet() {
+  const wantAll = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => v.toLowerCase() === 'alle');
+  poiMarkers.forEach(m => {
+    const props = (m.feature && m.feature.properties) || {};
+    const mc = String(props.category || '').trim().toLowerCase();
+    const match = Array.from(selectedCategories).some(v => mc === String(v).toLowerCase());
+    const show = wantAll || match;
+    if (show) poiLayer.addLayer(m); else poiLayer.removeLayer(m);
+  });
+}
+
+let categoryControlInstance = null;
+function buildOrUpdateCategoryControl(categories) {
+  try { if (categoryControlInstance) map.removeControl(categoryControlInstance); } catch (_) {}
+  const MultiCategoryControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      const container = L.DomUtil.create('div', 'leaflet-bar');
+      const wrap = L.DomUtil.create('div', '', container);
+      wrap.style.padding = '6px';
+      wrap.style.background = 'rgba(255,255,255,0.9)';
+      wrap.style.maxWidth = '220px';
+      const title = L.DomUtil.create('div', '', wrap);
+      title.textContent = 'Kategorie';
+      function categoryToIcon(cat) {
+        const s = String(cat || '').toLowerCase();
+        if (s === 'historie') return 'university';
+        if (s === 'landwirtschaft') return 'leaf';
+        if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'paw';
+        return 'map-marker';
+      }
+      function categoryToColor(cat) {
+        const s = String(cat || '').toLowerCase();
+        if (s === 'historie') return '#1f6feb'; // blue
+        if (s === 'landwirtschaft') return '#8B4513'; // brown
+        if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return '#006400'; // darkgreen
+        return '#5f9ea0'; // cadetblue
+      }
+      const allId = 'cat_all';
+      const allLabel = L.DomUtil.create('label', '', wrap);
+      const allCb = document.createElement('input'); allCb.type = 'checkbox'; allCb.id = allId;
+      const allSpan = document.createElement('span'); allSpan.textContent = ' Alle';
+      allLabel.style.display = 'flex';
+      allLabel.style.alignItems = 'center';
+      allLabel.style.margin = '2px 0';
+      allLabel.appendChild(allCb); allLabel.appendChild(allSpan);
+      wrap.appendChild(allLabel);
+      const list = L.DomUtil.create('div', '', wrap);
+      list.style.display = 'flex';
+      list.style.flexDirection = 'column';
+      list.style.gap = '4px';
+      categories.forEach(cat => {
+        const id = 'cat_' + btoa(unescape(encodeURIComponent(cat))).replace(/[^A-Za-z0-9]/g,'');
+        const label = document.createElement('label');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = id; cb.value = cat;
+        const span = document.createElement('span'); span.textContent = ' ' + cat;
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
+        label.style.margin = '2px 0';
+        label.appendChild(cb); label.appendChild(span);
+        const iconEl = document.createElement('i');
+        iconEl.className = 'fa fa-' + categoryToIcon(cat);
+        iconEl.style.marginLeft = '6px';
+        iconEl.style.color = categoryToColor(cat);
+        label.appendChild(iconEl);
+        list.appendChild(label);
+        if (selectedCategories.size > 0 && Array.from(selectedCategories).some(v => String(v).toLowerCase() === cat.toLowerCase())) cb.checked = true;
+        L.DomEvent.on(cb, 'change', function (e) {
+          if (cb.checked) selectedCategories.add(cb.value); else selectedCategories.delete(cb.value);
+          // Uncheck "Alle" when specific selection changes
+          allCb.checked = false;
+          applyCategoryFilterFromSet();
+        });
+      });
+      // Initialize "Alle" checkbox based on empty selection
+      allCb.checked = selectedCategories.size === 0 || Array.from(selectedCategories).some(v => v.toLowerCase() === 'alle');
+      L.DomEvent.on(allCb, 'change', function () {
+        if (allCb.checked) {
+          selectedCategories.clear();
+          // Uncheck all specific checkboxes
+          Array.from(list.querySelectorAll('input[type=checkbox]')).forEach(el => { el.checked = false; });
+        }
+        applyCategoryFilterFromSet();
+      });
+      // Allow interacting with checkboxes without blocking their default behavior
+      // Prevent map drag/zoom from clicks inside the control instead.
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      // Apply initial filter
+      setTimeout(applyCategoryFilterFromSet, 0);
+      return container;
+    }
+  });
+  categoryControlInstance = new MultiCategoryControl();
+  map.addControl(categoryControlInstance);
+}
 
 // Boundary polygon: load from data/bounds.geojson or use active bounds rectangle
 
@@ -301,6 +473,122 @@ fetch('data/poi.geojson').then(r => {
         }
       });
       map.addControl(new ImportControl());
+
+      // POI CSV Import and Export controls
+      function exportPOIGeoJSON() {
+        const fc = { type: 'FeatureCollection', features: [] };
+        poiLayer.eachLayer(layer => {
+          if (layer.getLatLng) {
+            const ll = layer.getLatLng();
+            const gj = layer.toGeoJSON && layer.toGeoJSON();
+            const props = (gj && gj.properties) || {};
+            fc.features.push({
+              type: 'Feature',
+              properties: props,
+              geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] }
+            });
+          }
+        });
+        const blob = new Blob([JSON.stringify(fc, null, 2)], { type: 'application/geo+json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'poi.geojson';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function parseCSVToGeoJSON(text) {
+        const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true }) : { data: [] };
+        const rows = result.data || [];
+        const features = [];
+        rows.forEach(row => {
+          const get = (k) => row[k] || row[k.toLowerCase()] || '';
+          const lat = parseFloat(get('lat') || get('latitude') || get('y'));
+          const lon = parseFloat(get('lon') || get('long') || get('lng') || get('x'));
+          if (!isFinite(lat) || !isFinite(lon)) return;
+          const props = {};
+          const title = get('title') || get('name');
+          const desc = get('desc') || get('description');
+          const address = get('address');
+          const hours = get('hours') || get('opening_hours');
+          const website = get('website') || get('link') || get('url');
+              const category = get('category') || get('subject');
+          const tagsRaw = get('tags');
+          const photosRaw = get('photos') || get('images');
+          if (title) props.title = title;
+          if (desc) props.desc = desc;
+          if (address) props.address = address;
+          if (hours) props.hours = hours;
+          if (website) props.website = website;
+          if (category) props.category = category;
+          if (tagsRaw) props.tags = String(tagsRaw).split(/[;,]/).map(s => s.trim()).filter(Boolean);
+          if (photosRaw) {
+            const arr = String(photosRaw).split(/[;,]/).map(s => s.trim()).filter(Boolean);
+            props.photos = arr.map(u => ({ url: u }));
+          }
+          features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
+        });
+        return { type: 'FeatureCollection', features };
+      }
+
+      const PoiCSVControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+          const container = L.DomUtil.create('div', 'leaflet-bar');
+          const btnCSV = L.DomUtil.create('a', '', container);
+          btnCSV.href = '#';
+          btnCSV.title = 'Import POIs from CSV';
+          btnCSV.textContent = 'CSV';
+          const fileInput = L.DomUtil.create('input', '', container);
+          fileInput.type = 'file';
+          fileInput.accept = '.csv,text/csv';
+          fileInput.style.display = 'none';
+          L.DomEvent.on(btnCSV, 'click', L.DomEvent.stopPropagation)
+                    .on(btnCSV, 'click', L.DomEvent.preventDefault)
+                    .on(btnCSV, 'click', function () { fileInput.click(); });
+          L.DomEvent.on(fileInput, 'change', function () {
+            const f = fileInput.files && fileInput.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              try {
+                const fc = parseCSVToGeoJSON(String(e.target.result));
+                poiLayer.clearLayers();
+                const markers = [];
+                fc.features.forEach(feat => {
+                  const c = feat.geometry && feat.geometry.coordinates;
+                  if (!c || c.length < 2) return;
+                  const latlng = L.latLng(c[1], c[0]);
+                  const m = L.marker(latlng).bindPopup(buildPoiPopupContent(feat));
+                  m.addTo(poiLayer);
+                  markers.push(m);
+                });
+                if (markers.length) {
+                  const g = L.featureGroup(markers);
+                  map.fitBounds(g.getBounds(), { padding: [20, 20] });
+                }
+              } catch (err) {
+                console.warn('Failed to import CSV as GeoJSON', err);
+              }
+            };
+            reader.readAsText(f);
+          });
+
+          const btnExport = L.DomUtil.create('a', '', container);
+          btnExport.href = '#';
+          btnExport.title = 'Export POIs to poi.geojson';
+          btnExport.textContent = '⤓POI';
+          L.DomEvent.on(btnExport, 'click', L.DomEvent.stopPropagation)
+                    .on(btnExport, 'click', L.DomEvent.preventDefault)
+                    .on(btnExport, 'click', exportPOIGeoJSON);
+
+          return container;
+        }
+      });
+      map.addControl(new PoiCSVControl());
     }
   });
 })();

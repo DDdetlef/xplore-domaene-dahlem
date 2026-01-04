@@ -53,6 +53,26 @@ Eine schlanke Leaflet-App mit:
 
 Beispiel siehe [data/poi.geojson](data/poi.geojson).
 
+### CSV → GeoJSON Import
+- CSV-Datei kann im Edit-Modus über den Button „CSV“ geladen werden.
+- Alternativ wird beim Start automatisch `data/poi.csv` geladen (falls vorhanden) oder du gibst die URL per `?csv=https://.../datei.csv` an.
+- Erwartete Spalten (mindestens): `lat`, `lon` (oder Synonyme: `latitude`/`y`, `long`/`lng`/`x`).
+- Optionale Spalten werden zu Properties:
+  - `title`/`name`, `desc`/`description`, `address`, `hours`/`opening_hours`, `website`/`link`/`url`
+  - `category`/`subject`: Kategorie (für Filter)
+  - `tags`: mit `,` oder `;` getrennte Liste
+  - `photos`/`images`: mit `,` oder `;` getrennte URLs
+### Kategorien (Filter)
+- Auswahl oben rechts mit Mehrfachauswahl (Checkboxen) – dynamisch aus den Daten.
+- Vorbelegung via URL: `?category=Historie,Landwirtschaft` (Komma/Strichpunkt getrennt).
+- Kategorie kommt aus `properties.category` (CSV: Spalte `category` oder `subject`).
+
+Markerfarben:
+- Historie: blau
+- Landwirtschaft: braun
+- Wildtiere & -pflanzen: dunkelgrün
+- Nach dem Import werden Marker erzeugt; per „⤓POI“ kannst du die Daten als `poi.geojson` exportieren.
+
 ## Hosting
 - GitHub Pages: Repo → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
 - WordPress: Statisch ausliefern, z. B. unter `/wp-content/uploads/xplore/`.

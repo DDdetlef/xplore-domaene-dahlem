@@ -342,13 +342,19 @@ function renderPOIFeatureCollection(fc) {
       return 'black';
     }
     const color = categoryToColor(props.category);
+    const popupOpts = {
+      maxWidth: 360,
+      autoPan: true,
+      autoPanPaddingTopLeft: L.point(30, 60),
+      autoPanPaddingBottomRight: L.point(30, 30)
+    };
     if (L.AwesomeMarkers && L.AwesomeMarkers.icon) {
       const icon = L.AwesomeMarkers.icon({ icon: categoryToIcon(props.category), prefix: 'fa', markerColor: color, iconColor: categoryToIconColor(props.category) });
       m = L.marker(latlng, { icon });
     } else {
       m = L.marker(latlng);
     }
-    m.bindPopup(buildPoiPopupContent(f));
+    m.bindPopup(buildPoiPopupContent(f), popupOpts);
     m.addTo(poiLayer);
     m.feature = f;
     markers.push(m);

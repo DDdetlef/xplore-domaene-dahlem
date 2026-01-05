@@ -208,9 +208,10 @@ try { updateMinZoomForBounds(); } catch (_) {}
 function clampViewToActiveBounds() {
   try {
     if (activeBounds && activeBounds.contains) {
+      const padded = activeBounds.pad(MAX_BOUNDS_PAD);
       const c = map.getCenter();
-      if (!activeBounds.contains(c)) {
-        map.panInsideBounds(activeBounds, { animate: false });
+      if (!padded.contains(c)) {
+        map.panInsideBounds(padded, { animate: false });
       }
     }
   } catch (_) {}

@@ -10,13 +10,13 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - [Schnellstart](#schnellstart)
   - [Lokale Entwicklungstipps](#lokale-entwicklungstipps)
 - [Daten (POIs)](#daten-pois)
-  - [CSV → GeoJSON Konvertierung (Pre-Deploy)](#csv-geojson-konvertierung-pre-deploy)
+  - [CSV → GeoJSON (CI)](#csv-geojson-ci)
     - [DE-Vollständigkeit und Bilder](#de-vollständigkeit-und-bilder)
     - [Voraussetzungen](#voraussetzungen)
-    - [Standardausführung](#standardausführung)
-    - [Eigene Pfade](#eigene-pfade)
+    - [Ausführung](#ausführung)
+    - [Monitoring](#monitoring)
+    - [Workflow-Überblick](#workflow-%C3%9Cberblick)
     - [Unterstützte Spalten](#unterstützte-spalten)
-    - [Schnell testen](#schnell-testen)
   - [CSV-Format](#csv-format)
     - [Mehrsprachige Inhalte (DE/EN)](#mehrsprachige-inhalte-deen)
   - [Marker & Kategorien](#marker--kategorien)
@@ -66,9 +66,9 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 
 ## Daten (POIs)
 
-### CSV → GeoJSON Konvertierung (Pre-Deploy)
+### CSV → GeoJSON (CI)
 - Zweck: CSV-POIs in eine GeoJSON-FeatureCollection umwandeln für Hosting/Versionierung.
-- Skript: siehe `scripts/csv_to_geojson.ps1`.
+  - CI-Workflow: siehe [.github/workflows/geojson.yml](.github/workflows/geojson.yml). Läuft automatisch bei Änderungen an [data/poi.csv](data/poi.csv) (Push/PR) und erzeugt/aktualisiert [data/poi.geojson](data/poi.geojson).
 
 #### DE-Vollständigkeit und Bilder
 - Das Skript mappt Inhalte DE-first: `title`, `text`, `subject`, `category` werden bevorzugt aus DE-Spalten übernommen und fallen auf EN zurück, wenn DE leer ist. Zusätzlich werden `*_en`-Felder gesetzt, sofern vorhanden.
@@ -76,39 +76,11 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - Ergebnis: GeoJSON enthält vollständige DE-Inhalte und Bild-URL, wodurch gemischte Sprachen und fehlende Bilder beim Erstladen vermieden werden.
 
 #### Voraussetzungen
-- Windows/PowerShell (oder `pwsh` plattformübergreifend).
-- CSV mit Semikolon (`;`) als Trennzeichen.
-- Für das Skript Koordinaten mit Dezimalpunkt (z. B. `52.457`). Die Web-App unterstützt zusätzlich Dezimal-Komma.
+- CSV mit Semikolon (`;`) als Trennzeichen, UTF‑8.
+- Koordinaten mit Dezimalpunkt (z. B. `52.457`). Die Web-App unterstützt zusätzlich Dezimal-Komma.
 
-#### Standardausführung
-- Im Projekt-Root wird `data/poi.geojson` aus `data/poi.csv` erzeugt:
-
-```powershell
-# Windows PowerShell
-./scripts/csv_to_geojson.ps1
-
-# Alternativ (PowerShell Core)
-pwsh -File ./scripts/csv_to_geojson.ps1
-```
-
-Wenn Skriptausführung deaktiviert ist (PSSecurityException), temporär für die Sitzung erlauben:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-Unblock-File -Path ./scripts/csv_to_geojson.ps1
-./scripts/csv_to_geojson.ps1
-```
-
-Oder einmalig ohne Änderung der Sitzung:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1
-```
-
-#### Eigene Pfade
-```powershell
-./scripts/csv_to_geojson.ps1 -CsvPath ./data/meine_pois.csv -OutPath ./data/meine_pois.geojson
-```
+#### Ausführung
+- Keine lokale Vorab-Konvertierung nötig: Die GitHub Action führt die Konvertierung serverseitig aus und committet Änderungen an `data/poi.geojson` automatisch.
 
 #### Unterstützte Spalten
 - Koordinaten: `lat`/`latitude`/`y` und `lon`/`long`/`lng`/`x`/`longitude` (Auto-Swap bei vertauschten Werten).
@@ -119,11 +91,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1
 - Bei Dezimal-Komma in Koordinaten vorab zu Dezimalpunkt konvertieren.
 - Das Skript gibt die Anzahl der geschriebenen Features aus.
 
-#### Schnell testen
-```powershell
-./scripts/csv_to_geojson.ps1
-Get-Item ./data/poi.geojson
-```
+#### Monitoring
+- Status im Actions-Tab oder Badge oben im README einsehbar.
+- Der Workflow validiert, dass `poi.geojson` mindestens 1 Feature enthält.
+
+#### Workflow-Überblick
+- Trigger: Push/PR mit Änderungen an [data/poi.csv](data/poi.csv); manueller Start via Actions (workflow_dispatch).
+- Branch: läuft nur auf `main`.
+- Runner: `ubuntu-latest` mit PowerShell Core (`pwsh`).
+- Schritte:
+  - Checkout des Repos
+  - Konvertierung: [scripts/csv_to_geojson.ps1](scripts/csv_to_geojson.ps1)
+  - Validierung: Feature-Anzahl ≥ 1
+  - Commit: aktualisiertes [data/poi.geojson](data/poi.geojson) bei Änderungen
+- Berechtigungen: `contents: write` zum Committen durch den Workflow.
+- Ergebnis: `poi.geojson` wird automatisch aktualisiert; Status/Logs sind in Actions/Checks sichtbar.
 
 ### CSV-Format
 - Trennzeichen: Semikolon `;` (Excel-Standard in DE). Dezimal-Komma wird unterstützt.
@@ -160,7 +142,7 @@ Get-Item ./data/poi.geojson
   - Zeichnen/Bearbeiten (Leaflet Draw),
   - Export (⤓) speichert `bounds.geojson`,
   - Import (📥) lädt eine lokale GeoJSON/`bounds.geojson`.
-  - POI-CSV Import (CSV) und POI-GeoJSON Export (⤓POI).
+  - POI-GeoJSON Export (⤓POI).
   - Reload-Button lädt CSV/GeoJSON neu mit Cache-Busting.
 
 ## URL-Parameter (optional)
@@ -180,7 +162,7 @@ Get-Item ./data/poi.geojson
 - Overscroll-Schutz: `overscroll-behavior` verhindert Hintergrund-Scrollen bei offenem mobilen Overlay.
 
 ## Netzwerk-Robustheit
-- CSV/GeoJSON-Laden mit Retry, Timeout und Backoff.
+- GeoJSON-Laden mit Retry, Timeout und Backoff.
 - Bei Fehlern: Toast mit "Reload failed — tap to retry" (antippen, um erneut zu laden).
 
 ## Verhalten Sprach-Umschalter
@@ -199,22 +181,9 @@ Get-Item ./data/poi.geojson
 
 ## Troubleshooting
 
-- **Bilder fehlen beim Erststart:** Regeneriere GeoJSON aus der CSV, damit `image` korrekt gesetzt ist.
-  ```powershell
-  powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1 -CsvPath ./data/poi.csv -OutPath ./data/poi.geojson
-  ```
-  Prüfe danach, ob die Bild-URL im GeoJSON vorhanden ist: [data/poi.geojson](data/poi.geojson).
-- **Nur GeoJSON:** CSV wird nicht mehr im Frontend geladen; stelle sicher, dass `data/poi.geojson` vorhanden ist.
-- **Gemischte Sprache beim Erstladen:**
-  - Stelle sicher, dass DE-Spalten (`subject`, `title`, `text`, `funfact`, `category`) in der CSV befüllt sind.
-  - Regeneriere GeoJSON; das Skript fällt für DE-Felder auf EN zurück, falls DE leer ist.
-
-- **PowerShell: Skript gesperrt (PSSecurityException):**
-  ```powershell
-  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-  Unblock-File -Path ./scripts/csv_to_geojson.ps1
-  ./scripts/csv_to_geojson.ps1
-  ```
+- **Bilder fehlen beim Erststart:** Stelle sicher, dass `image` oder `photos` in [data/poi.csv](data/poi.csv) gefüllt sind und prüfe die Action-Logs. Nach erfolgreichem Lauf enthält [data/poi.geojson](data/poi.geojson) die Bild-URL.
+- **Nur GeoJSON:** CSV wird nicht im Frontend geladen; `poi.geojson` muss vorhanden sein (wird durch CI erzeugt).
+- **Gemischte Sprache beim Erstladen:** DE-Felder (`subject`, `title`, `text`, `funfact`, `category`) in CSV befüllen; die Konvertierung setzt DE-first und fällt auf EN zurück, falls DE leer ist.
 
 - **Cache-Probleme:**
   - Hartes Reload im Browser (Strg+F5), oder Entwicklungs-URL mit Cache-Busting nutzen.

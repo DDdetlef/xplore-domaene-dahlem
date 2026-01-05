@@ -220,3 +220,31 @@ Get-Item ./data/poi.geojson
 - Netzwerk-Robustheit:
   - Bei Fehlern erscheint Toast und „Tap to retry“ funktioniert
   - Save-Data-Hinweis auf Low-End/gedrosselter Verbindung sichtbar
+
+## Drittanbieter / Abhängigkeiten
+
+- Leaflet (Kartenbibliothek)
+  - CSS/JS via CDN: unpkg.com
+  - https://leafletjs.com/
+- Leaflet.AwesomeMarkers (Marker-Symbole)
+  - CSS/JS via CDN: unpkg.com
+  - https://github.com/lennardv2/Leaflet.awesome-markers
+- Leaflet.Draw (Zeichen-/Editierwerkzeuge)
+  - CSS/JS via CDN: cdnjs.com
+  - https://github.com/Leaflet/Leaflet.draw
+- Leaflet-Providers (Tile-Provider Katalog)
+  - JS via CDN: unpkg.com
+  - https://github.com/leaflet-extras/leaflet-providers
+- Font Awesome 4.7 (Icons)
+  - CSS via CDN: cdnjs.com
+  - https://fontawesome.com/v4.7/
+- PapaParse (CSV-Parser)
+  - JS via CDN: cdnjs.com
+  - https://www.papaparse.com/
+- Kartenkacheln (Default)
+  - OpenStreetMap Standard: https://tile.openstreetmap.org (Attribution erforderlich)
+  - Nutzungsbedingungen/Policies beachten.
+- Kartenkacheln (optional via `provider=`)
+  - Diverse Drittanbieter aus leaflet-providers; ggf. API-Key nötig; eigene Nutzungsbedingungen beachten.
+- Externe Inhalte aus Daten
+  - Bilder/Links aus CSV/GeoJSON (z. B. `www.domaene-dahlem.de`, `live.staticflickr.com`/`flickr.com`) werden direkt vom jeweiligen Host geladen.

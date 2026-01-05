@@ -22,6 +22,26 @@ This document outlines pragmatic next steps to evolve the Domäne Dahlem map, fo
   - Coordinate sanity check; swap heuristic retained
   - Validate photo URLs (optional HEAD check)
 
+## Photo Attribution (Plan)
+- CSV (Variant A — numbered columns; Excel-friendly):
+  - Primary image: `image`, `image_author`, `image_author_url`, `image_license`, `image_license_url`
+  - Additional photos (repeat pattern as needed, e.g., up to 3):
+    - `photo1_url`, `photo1_author`, `photo1_author_url`, `photo1_license`, `photo1_license_url`
+    - `photo2_url`, `photo2_author`, `photo2_author_url`, `photo2_license`, `photo2_license_url`
+    - `photo3_url`, `photo3_author`, `photo3_author_url`, `photo3_license`, `photo3_license_url`
+- Converter mapping (GeoJSON properties):
+  - `image`: primary URL (kept for immediate popup image)
+  - `image_attribution`: `{ author, author_url, license, license_url }`
+  - `photos`: array of `{ url, author, author_url, license, license_url }` built from `photoN_*`
+- CI validation (optional to enforce quality):
+  - If `image` exists → require `image_author` and `image_license` (fail CI if missing)
+  - Warn if `*_url` fields are present but not valid URLs
+  - Limit `photoN_*` to N≤3 by default; ignore extra sets
+- Frontend rendering plan (popups):
+  - Show primary image as today; beneath it: `Foto: <author> — <license>` with links to `author_url` and `license_url`
+  - For multiple photos: keep camera icons; tooltip or small caption with author/license, or open link to source
+  - Sanitize all displayed text; no HTML injection from CSV
+
 ## CI/CD
 - Extend [.github/workflows/geojson.yml](.github/workflows/geojson.yml):
   - Step: point-in-polygon validation against bounds

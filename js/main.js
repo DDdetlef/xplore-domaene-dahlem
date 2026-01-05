@@ -193,16 +193,8 @@ try {
   if (typeof maxZoomMap !== 'number') { map.setMaxZoom(layerMax); }
 } catch (_) {}
 
-// Dynamic minZoom based on bounds so zooming out can't exceed the padded area
-function updateMinZoomForBounds() {
-  try {
-    if (!activeBounds || !map || !map.getBoundsZoom) return;
-    const padded = activeBounds.pad(MAX_BOUNDS_PAD);
-    const fitZoom = map.getBoundsZoom(padded, true);
-    if (typeof minZoom !== 'number') { map.setMinZoom(fitZoom); }
-  } catch (_) {}
-}
-try { updateMinZoomForBounds(); } catch (_) {}
+// Note: We rely on maxBounds for containment and do not clamp minZoom dynamically,
+// so zoom controls remain usable. If you want to hard-limit zoom-out, set ?minzoom=.
 
 // Extra safety: clamp view back inside active bounds after user interactions
 function clampViewToActiveBounds() {
@@ -404,7 +396,7 @@ function debounce(fn, wait) {
   };
 }
 try {
-  const invalidate = debounce(function () { try { map.invalidateSize(); updateMinZoomForBounds(); } catch (_) {} }, 120);
+  const invalidate = debounce(function () { try { map.invalidateSize(); } catch (_) {} }, 120);
   window.addEventListener('orientationchange', invalidate, { passive: true });
   window.addEventListener('resize', invalidate, { passive: true });
 } catch (_) {}

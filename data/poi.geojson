@@ -115,6 +115,35 @@
                                                           ],
                                           "type":  "Point"
                                       }
+                     },
+                     {
+                         "properties":  {
+                                            "subject_en":  "Biodiversity",
+                                            "photos":  [
+                                                           {
+                                                               "url":  "https://live.staticflickr.com/7211/7209363762_a489ed9539_z.jpg"
+                                                           }
+                                                       ],
+                                            "subject":  "Biodiversität",
+                                            "title_en":  "Nesting Aid for Wild Bees",
+                                            "funfact_en":  "Sorry, still missing!",
+                                            "image":  "https://live.staticflickr.com/7211/7209363762_a489ed9539_z.jpg",
+                                            "website":  "https://www.domaene-dahlem.de/wildbienen-vortrag/",
+                                            "title":  "Nisthilfe für Wildbienen",
+                                            "text":  "Nicht alle Wildbiene legen ihre Brutröhren selbst an. Viele bauen ihre Brutzellen in Bohrgängen, die normalerweise von Käfern zurückgelassen wurden. \n\nDa solche natürlichen Nistplätze in unserer ausgeräumten Kulturlandschaft immer seltener werden, ist das Aufstellen von Insekten-Nisthilfen ein Beitrag zum Artenschutz.",
+                                            "text_en":  "Sorry, still missing!",
+                                            "category":  "Wildtiere \u0026 -pflanzen",
+                                            "category_en":  "Wildlife",
+                                            "funfact":  "Solche Insekten-Nisthilfen lassen sich leicht selber bauen. Sandbienen, Wollbienen und die Rote Mauerbiene sind einige Wildbienenarten, mit deren Besuch wir hier in unserer Region rechnen können. "
+                                        },
+                         "type":  "Feature",
+                         "geometry":  {
+                                          "coordinates":  [
+                                                              13.289059163596416,
+                                                              52.462175328060077
+                                                          ],
+                                          "type":  "Point"
+                                      }
                      }
                  ],
     "type":  "FeatureCollection"

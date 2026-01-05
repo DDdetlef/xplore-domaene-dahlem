@@ -216,10 +216,13 @@ function updateMinZoomForBounds() {
     const padded = activeBounds.pad(MAX_BOUNDS_PAD);
     // 'inside' true => the zoom that fits the given bounds fully inside the view
     const z = map.getBoundsZoom(padded, true);
-    if (isFinite(z)) {
-      map.setMinZoom(z);
+    // Clamp to sane range and never exceed current maxZoom
+    const currentMax = (typeof maxZoomMap === 'number' ? maxZoomMap : (map.getMaxZoom ? map.getMaxZoom() : 22)) || 22;
+    const clamped = isFinite(z) ? Math.max(0, Math.min(z, currentMax)) : null;
+    if (clamped !== null) {
+      map.setMinZoom(clamped);
       // If current zoom is lower than allowed min, bump it up
-      if (map.getZoom && map.getZoom() < z) { map.setZoom(z); }
+      if (map.getZoom && map.getZoom() < clamped) { map.setZoom(clamped); }
     }
   } catch (_) {}
 }
@@ -227,12 +230,12 @@ if (bbox) {
   activeBounds = bbox;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
-  updateMinZoomForBounds();
+  setTimeout(updateMinZoomForBounds, 0);
 } else if (DEFAULT_BBOX_DOMAENE_DAHLEM) {
   activeBounds = DEFAULT_BBOX_DOMAENE_DAHLEM;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
-  updateMinZoomForBounds();
+  setTimeout(updateMinZoomForBounds, 0);
 } else {
   map.setView([52.52, 13.405], 11);
 }
@@ -863,7 +866,7 @@ function buildOrUpdateCategoryControl(categories) {
         // Add extra top padding to ensure the polygon isn't clipped by controls
         map.fitBounds(b, { paddingTopLeft: [20, 60], paddingBottomRight: [20, 20] });
         // Recompute min zoom based on new bounds
-        try { updateMinZoomForBounds(); } catch (_) {}
+        try { setTimeout(updateMinZoomForBounds, 0); } catch (_) {}
         // Ensure proper sizing if assets changed layout
         setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 0);
       }

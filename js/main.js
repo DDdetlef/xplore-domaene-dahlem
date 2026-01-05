@@ -61,8 +61,21 @@ function setLanguage(lang) {
   // Remember whether a popup is currently open
   let wasMobileOpen = false;
   let wasMarkerPopupOpen = false;
+  let openPopupMarker = null;
   try { wasMobileOpen = isMobile() && isMobilePopupOpen(); } catch (_) {}
-  try { wasMarkerPopupOpen = !isMobile() && !!(lastClickedMarker && lastClickedMarker.isPopupOpen && lastClickedMarker.isPopupOpen()); } catch (_) {}
+  try {
+    if (!isMobile()) {
+      // Prefer Leaflet's reference to the currently open popup source
+      const p = map && map._popup;
+      if (p && p._source) {
+        openPopupMarker = p._source;
+        wasMarkerPopupOpen = true;
+      } else {
+        wasMarkerPopupOpen = !!(lastClickedMarker && lastClickedMarker.isPopupOpen && lastClickedMarker.isPopupOpen());
+        openPopupMarker = wasMarkerPopupOpen ? lastClickedMarker : null;
+      }
+    }
+  } catch (_) {}
 
   currentLang = lang;
   try { localStorage.setItem('lang', lang); } catch (_) {}
@@ -116,18 +129,19 @@ function setLanguage(lang) {
 
   // Update last clicked marker popup only if a popup was previously open
   try {
-    if (lastClickedMarker && lastClickedMarker.feature && (wasMobileOpen || wasMarkerPopupOpen)) {
-      const content = buildPoiPopupContent(lastClickedMarker.feature);
+    const targetMarker = openPopupMarker || lastClickedMarker;
+    if (targetMarker && targetMarker.feature && (wasMobileOpen || wasMarkerPopupOpen)) {
+      const content = buildPoiPopupContent(targetMarker.feature);
       if (isMobile()) {
         // Update mobile overlay content without closing
         if (mobilePopupBodyEl) { try { mobilePopupBodyEl.innerHTML = content; } catch (_) {} }
         else { openMobilePopup(content); }
       } else if (wasMarkerPopupOpen) {
         // Desktop: update the existing popup content; keep it open
-        const p = lastClickedMarker.getPopup && lastClickedMarker.getPopup();
+        const p = targetMarker.getPopup && targetMarker.getPopup();
         if (p && p.setContent) {
           try { p.setContent(content); } catch (_) {}
-        } else if (lastClickedMarker.bindPopup) {
+        } else if (targetMarker.bindPopup) {
           // Fallback in case popup instance was missing
           const maxW = Math.min(360, Math.floor(window.innerWidth * 0.92));
           const popupOpts = {
@@ -137,7 +151,7 @@ function setLanguage(lang) {
             autoPanPaddingTopLeft: L.point(30, 120),
             autoPanPaddingBottomRight: L.point(30, 50)
           };
-          try { lastClickedMarker.bindPopup(content, popupOpts); } catch (_) {}
+          try { targetMarker.bindPopup(content, popupOpts); } catch (_) {}
         }
       }
     }

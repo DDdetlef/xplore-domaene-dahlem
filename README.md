@@ -156,6 +156,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - `metrics=1` zeigt eine einfache Tile-Metrik-HUD.
 - `lang=en` schaltet die UI auf Englisch (DE/EN Umschalter oben rechts).
  - `cluster=0` deaktiviert Marker-Clustering (Standard: aktiv); `cluster=1` erzwingt Aktivierung.
+ - `zoomoutpadm=2000` setzt die Zoom‑Out‑Nachbarschaft in Metern (Standard derzeit testweise 2000 m).
 
 ## Performance & Robustheit (Mobil)
 - Save-Data/Low-End-Erkennung: Nutzt `navigator.connection` (falls vorhanden), zeigt Hinweis und passt Verhalten an.

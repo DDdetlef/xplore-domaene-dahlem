@@ -208,7 +208,13 @@ let activeBounds = null;
 let boundaryGeoJSON = null; // precise polygon for containment checks
 
 // Pad-based zoom-out limit: expand bbox by a fixed distance (meters) on each side
-const ZOOM_OUT_PAD_METERS = 1000; // neighbourhood size for zoom-out extent
+// Override via ?zoomoutpadm=<meters>; default (testing) set to 2000 m
+const ZOOM_OUT_PAD_METERS = (function(){
+  const raw = getQueryParam('zoomoutpadm');
+  const val = parseFloat(raw);
+  if (isFinite(val) && val >= 0) return val;
+  return 2000; // test default
+})();
 function metersToDegrees(lat, meters) {
   try {
     const dLat = meters / 111320; // meters per degree latitude

@@ -9,6 +9,15 @@ if (!(Test-Path -Path $CsvPath)) {
 }
 
 $rows = Import-Csv -Path $CsvPath -Delimiter ';'
+$function:NormalizeText = {
+  param([string]$s)
+  if ([string]::IsNullOrWhiteSpace($s)) { return $null }
+  # Normalize Windows newlines and convert literal \n sequences back to real newlines
+  $x = $s -replace "\r\n", "`n"
+  $x = $x -replace "\\n", "`n"
+  $x = $x.Trim()
+  return $x
+}
 
 function GetVal {
   param($row, [string[]]$keys)
@@ -49,6 +58,8 @@ foreach ($row in $rows) {
   # Prefer explicit DE/EN text fields; fall back between languages to ensure DE completeness
   $text = GetVal $row @('text','desc','description')
   $text_en = GetVal $row @('text_en','desc_en','description_en')
+  $text = & $function:NormalizeText $text
+  $text_en = & $function:NormalizeText $text_en
   # Subject in DE/EN
   $subject = GetVal $row @('subject')
   $subject_en = GetVal $row @('subject_en')
@@ -93,6 +104,8 @@ foreach ($row in $rows) {
   }
   $funfact = GetVal $row @('funfact')
   $funfact_en = GetVal $row @('funfact_en')
+  $funfact = & $function:NormalizeText $funfact
+  $funfact_en = & $function:NormalizeText $funfact_en
   if ($funfact -and "$funfact" -ne '') { $props.funfact = "$funfact" }
   elseif ($funfact_en -and "$funfact_en" -ne '') { $props.funfact = "$funfact_en" }
   if ($funfact_en -and "$funfact_en" -ne '') { $props.funfact_en = "$funfact_en" }

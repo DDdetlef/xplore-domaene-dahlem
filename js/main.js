@@ -86,24 +86,32 @@ function setLanguage(lang) {
     poiMarkers.forEach(m => {
       const f = m && m.feature;
       if (!f) return;
-      const content = buildPoiPopupContent(f);
       if (isMobile()) {
         try { m.off('click'); } catch (_) {}
-        m.on('click', () => openMobilePopup(content));
+        m.on('click', () => {
+          const content = buildPoiPopupContent(f);
+          openMobilePopup(content);
+        });
       } else {
-        if (m.getPopup && m.getPopup()) {
-          try { m.getPopup().setContent(content); } catch (_) {}
-        } else {
-          const maxW = Math.min(360, Math.floor(window.innerWidth * 0.92));
-          const popupOpts = {
-            maxWidth: maxW,
-            autoPan: true,
-            keepInView: true,
-            autoPanPaddingTopLeft: L.point(30, 120),
-            autoPanPaddingBottomRight: L.point(30, 50)
-          };
-          try { m.bindPopup(content, popupOpts); } catch (_) {}
-        }
+        try { m.off('click'); } catch (_) {}
+        const maxW = Math.min(360, Math.floor(window.innerWidth * 0.92));
+        const popupOpts = {
+          maxWidth: maxW,
+          autoPan: true,
+          keepInView: true,
+          autoPanPaddingTopLeft: L.point(30, 120),
+          autoPanPaddingBottomRight: L.point(30, 50)
+        };
+        m.on('click', () => {
+          const content = buildPoiPopupContent(f);
+          const p = m.getPopup && m.getPopup();
+          if (p && p.setContent) {
+            try { p.setContent(content); } catch (_) {}
+          } else {
+            try { m.bindPopup(content, popupOpts); } catch (_) {}
+          }
+          try { m.openPopup && m.openPopup(); } catch (_) {}
+        });
       }
     });
   } catch (_) {}
@@ -301,6 +309,8 @@ const poiLayer = L.featureGroup().addTo(map);
 const poiMarkers = [];
 let lastClickedMarker = null;
 let selectedCategories = new Set();
+// Track which data source is currently loaded: 'csv' or 'geojson'
+let DATA_SOURCE = 'unknown';
 function parseInitialCategories() {
   const raw = getQueryParam('category');
   if (!raw) return;
@@ -334,7 +344,15 @@ function formatTextToHTML(raw) {
 }
 function buildPoiPopupContent(f) {
   const props = f && f.properties ? f.properties : {};
-  function pickLang(deVal, enVal) { return currentLang === 'en' ? (enVal || deVal || '') : (deVal || enVal || ''); }
+  // Language picker: for GeoJSON (partial i18n), avoid cross-language fallback to keep content consistent
+  function pickLang(deVal, enVal) {
+    const de = deVal || '';
+    const en = enVal || '';
+    if (DATA_SOURCE === 'geojson') {
+      return currentLang === 'en' ? en : de;
+    }
+    return currentLang === 'en' ? (en || de) : (de || en);
+  }
   // Subject and category, shown as breadcrumb "Category / Subject"
   const subject = pickLang(props.subject || '', props.subject_en || '');
   function categoryToLabel(cat) {
@@ -637,6 +655,7 @@ function renderPOIFeatureCollection(fc) {
 function reloadPOIs(opts) {
   const toast = !!(opts && opts.toast);
   const csvParam = getQueryParam('csv');
+  const sourceParam = (getQueryParam('source') || '').toLowerCase(); // optional: 'csv' or 'geojson'
   const cacheBust = (u) => u ? (u + (u.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now()) : u;
   function fetchWithRetry(url, options, retryOpts) {
     const retries = (retryOpts && retryOpts.retries) || 2;
@@ -663,8 +682,10 @@ function reloadPOIs(opts) {
         const res = parseCSVValidated(text);
         const fc = res.fc;
         if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('csv empty');
+        DATA_SOURCE = 'csv';
         renderPOIFeatureCollection(fc);
-        if (toast) showToast(`POIs reloaded (${res.stats.valid} ok, ${res.stats.invalid} invalid)`);
+        if (toast) showToast(`POIs reloaded from CSV (${res.stats.valid} ok, ${res.stats.invalid} invalid)`);
+        try { console.log('POIs source:', DATA_SOURCE); } catch (_) {}
         if (res.stats.invalid) console.warn('CSV issues:', res.stats.issues);
         return true;
       });
@@ -673,10 +694,24 @@ function reloadPOIs(opts) {
     const u = cacheBust('data/poi.geojson');
     return fetchWithRetry(u, {}, { retries: 2, timeoutMs: 5000, backoffMs: 800 })
       .then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
-      .then(fc => { if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty'); renderPOIFeatureCollection(fc); if (toast) showToast('POIs reloaded'); return true; });
+      .then(fc => {
+        if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty');
+        DATA_SOURCE = 'geojson';
+        renderPOIFeatureCollection(fc);
+        if (toast) showToast('POIs reloaded from GeoJSON');
+        try { console.log('POIs source:', DATA_SOURCE); } catch (_) {}
+        return true;
+      });
   }
-  const chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
-                         : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
+  let chain;
+  if (sourceParam === 'geojson') {
+    chain = tryGeoJSON();
+  } else if (sourceParam === 'csv') {
+    chain = csvParam ? tryCSV(csvParam) : tryCSV('data/poi.csv');
+  } else {
+    chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
+                     : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
+  }
   return chain.catch((err) => {
     if (toast) showToast({ text: 'Reload failed — tap to retry', duration: 4000, onClick: function () { try { reloadPOIs({ toast: true }); } catch (_) {} } });
     // neither CSV nor GeoJSON present; keep default view

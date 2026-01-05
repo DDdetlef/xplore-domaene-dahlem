@@ -45,35 +45,54 @@ foreach ($row in $rows) {
 
   $props = @{}
   $title = GetVal $row @('title','name')
-  if ($title) { $props.title = $title }
   $title_en = GetVal $row @('title_en','name_en')
-  if ($title_en) { $props.title_en = $title_en }
-  $desc = GetVal $row @('desc','description')
-  if ($desc) { $props.desc = $desc }
-  $desc_en = GetVal $row @('desc_en','description_en','text_en')
-  if ($desc_en) { $props.desc_en = $desc_en }
+  # Prefer explicit DE/EN text fields; fall back between languages to ensure DE completeness
+  $text = GetVal $row @('text','desc','description')
+  $text_en = GetVal $row @('text_en','desc_en','description_en')
+  # Subject in DE/EN
+  $subject = GetVal $row @('subject')
+  $subject_en = GetVal $row @('subject_en')
+  # Category (DE/EN)
+  $category = GetVal $row @('category')
+  $category_en = GetVal $row @('category_en')
+
+  # Assign properties with DE-first, fallback to EN if DE missing
+  if ($title -and "$title" -ne '') { $props.title = "$title" }
+  elseif ($title_en -and "$title_en" -ne '') { $props.title = "$title_en" }
+  if ($title_en -and "$title_en" -ne '') { $props.title_en = "$title_en" }
+
+  if ($text -and "$text" -ne '') { $props.text = "$text" }
+  elseif ($text_en -and "$text_en" -ne '') { $props.text = "$text_en" }
+  if ($text_en -and "$text_en" -ne '') { $props.text_en = "$text_en" }
+
+  if ($subject -and "$subject" -ne '') { $props.subject = "$subject" }
+  elseif ($subject_en -and "$subject_en" -ne '') { $props.subject = "$subject_en" }
+  if ($subject_en -and "$subject_en" -ne '') { $props.subject_en = "$subject_en" }
+
+  if ($category -and "$category" -ne '') { $props.category = "$category" }
+  elseif ($category_en -and "$category_en" -ne '') { $props.category = "$category_en" }
+  if ($category_en -and "$category_en" -ne '') { $props.category_en = "$category_en" }
   $address = GetVal $row @('address')
   if ($address) { $props.address = $address }
   $hours = GetVal $row @('hours','opening_hours')
   if ($hours) { $props.hours = $hours }
   $website = GetVal $row @('website','link','url')
   if ($website) { $props.website = $website }
-  $category = GetVal $row @('category','subject')
-  if ($category) { $props.category = $category }
-  $subject_en = GetVal $row @('subject_en')
-  if ($subject_en) { $props.subject_en = $subject_en }
   $tagsS = GetVal $row @('tags')
   if ($tagsS) { $props.tags = SplitList $tagsS }
-  $photosS = GetVal $row @('photos','images')
+  $photosS = GetVal $row @('photos','images','image')
   if ($photosS) {
     $urls = SplitList $photosS
     $props.photos = @()
     foreach ($u in $urls) { $props.photos += @{ url = $u } }
+    # also expose first image as 'image'
+    if ($urls.Count -gt 0) { $props.image = $urls[0] }
   }
   $funfact = GetVal $row @('funfact')
-  if ($funfact) { $props.funfact = $funfact }
   $funfact_en = GetVal $row @('funfact_en')
-  if ($funfact_en) { $props.funfact_en = $funfact_en }
+  if ($funfact -and "$funfact" -ne '') { $props.funfact = "$funfact" }
+  elseif ($funfact_en -and "$funfact_en" -ne '') { $props.funfact = "$funfact_en" }
+  if ($funfact_en -and "$funfact_en" -ne '') { $props.funfact_en = "$funfact_en" }
 
   $feature = @{ type = 'Feature'; properties = $props; geometry = @{ type = 'Point'; coordinates = @($lon, $lat) } }
   $features += $feature

@@ -278,7 +278,7 @@ function buildPoiPopupContent(f) {
   if (title) parts.push(`<h3 style=\"margin:4px 0\">${esc(title)}</h3>`);
   if (text) parts.push(formatTextToHTML(text));
   if (funfact) parts.push(`<div><strong>${esc(t('funfact_label'))}</strong> ${esc(funfact)}</div>`);
-  if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\"/></div>`);
+  if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\" loading=\"lazy\" decoding=\"async\" /></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]
   if (photos) parts.push(photos);
   if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">${esc(t('more_info'))}</a></div>`);
@@ -316,6 +316,14 @@ if (mobilePopupBackEl) {
 
 // Initialize language-dependent UI text (back button)
 setLanguage(currentLang);
+
+// Improve mobile robustness: ensure map resizes correctly on viewport changes
+try {
+  window.addEventListener('orientationchange', function () { try { map.invalidateSize(); } catch (_) {} }, { passive: true });
+} catch (_) {}
+try {
+  window.addEventListener('resize', function () { try { map.invalidateSize(); } catch (_) {} }, { passive: true });
+} catch (_) {}
 
 // Parse CSV to GeoJSON (top-level), recognizing subject, title, text, funfact, image, link
 function parseCSVToGeoJSON(text) {

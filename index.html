@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <style>
     html, body { margin: 0; padding: 0; height: 100%; }
+    /* Prevent background overscroll/bounce on mobile */
+    html, body { overscroll-behavior: none; }
     :root {
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -42,7 +44,7 @@
     #mobile-popup { position: fixed; inset: 0; background: #fff; z-index: 10000; display: none; }
     #mobile-popup .mp-header { display: flex; align-items: center; gap: 8px; padding: calc(8px + var(--safe-top)) 12px 8px 12px; border-bottom: 1px solid #e5e5e5; }
     #mobile-popup .mp-header .mp-back { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: none; font: 16px system-ui, sans-serif; padding: 8px; color: #111; }
-    #mobile-popup .mp-body { padding: 12px; height: calc(100dvh - 56px - var(--safe-top) - var(--safe-bottom)); overflow-y: auto; }
+    #mobile-popup .mp-body { padding: 12px; height: calc(100dvh - 56px - var(--safe-top) - var(--safe-bottom)); overflow-y: auto; overscroll-behavior: contain; }
 
     /* Slightly smaller AwesomeMarkers globally */
     .awesome-marker, .awesome-marker-shadow {

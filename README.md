@@ -8,7 +8,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - [Schnellstart](#schnellstart)
   - [Lokale Entwicklungstipps](#lokale-entwicklungstipps)
 - [Daten (POIs)](#daten-pois)
-  - [CSV → GeoJSON Konvertierung](#csv-geojson-konvertierung)
+  - [CSV → GeoJSON Konvertierung (Pre-Deploy)](#csv-geojson-konvertierung-pre-deploy)
     - [DE-Vollständigkeit und Bilder](#de-vollständigkeit-und-bilder)
     - [Voraussetzungen](#voraussetzungen)
     - [Standardausführung](#standardausführung)
@@ -34,7 +34,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - Kategorien-Filter als Burger-Menü (mobil einklappbar)
 - Leaflet Popups mit strukturierten Daten (Thema, Titel, Text, Fun Fact, Foto, Link)
 - Mobile Vollbild-Popups mit Zurück-Pfeil (Smartphones).
-- POIs aus CSV oder GeoJSON; CSV-Validator mit Bounds-Prüfung.
+ - POIs aus GeoJSON (vorab aus CSV generiert).
 - Präzise Begrenzung per `data/bounds.geojson` (Point-in-Polygon).
 - Robuste Koordinaten-Verarbeitung (Dezimal-Komma, Auto-Swap lat/lon).
 - Multilingual (DE/EN)
@@ -64,7 +64,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 
 ## Daten (POIs)
 
-### CSV → GeoJSON Konvertierung
+### CSV → GeoJSON Konvertierung (Pre-Deploy)
 - Zweck: CSV-POIs in eine GeoJSON-FeatureCollection umwandeln für Hosting/Versionierung.
 - Skript: siehe `scripts/csv_to_geojson.ps1`.
 
@@ -113,7 +113,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1
 - Eigenschaften: `title`/`name`, `desc`/`description`, `address`, `hours`/`opening_hours`, `website`/`link`/`url`, `category`/`subject`, `tags`, `photos`/`images` (Listen per `;` oder `,`).
 
 #### Hinweise
-- Nach der Konvertierung lädt die App weiterhin bevorzugt `data/poi.csv`. Für GeoJSON-Nutzung CSV umbenennen/entfernen, damit `data/poi.geojson` geladen wird. Alternativ kann per URL-Parameter die Quelle erzwungen werden (siehe unten).
+- Frontend lädt ausschließlich `data/poi.geojson`. CSV wird nicht im Browser geparst.
 - Bei Dezimal-Komma in Koordinaten vorab zu Dezimalpunkt konvertieren.
 - Das Skript gibt die Anzahl der geschriebenen Features aus.
 
@@ -163,8 +163,6 @@ Get-Item ./data/poi.geojson
 
 ## URL-Parameter (optional)
 - `provider=OpenTopoMap` oder `Thunderforest.Outdoors&apikey=DEIN_KEY`
-- `csv=https://.../datei.csv`
-- `source=csv` oder `source=geojson` erzwingt die Datenquelle (Standard: CSV, Fallback GeoJSON)
 - `category=Historie;Landwirtschaft`
 - `minzoom=..&maxzoom=..`
 - `bbox=minLon,minLat,maxLon,maxLat`
@@ -204,11 +202,7 @@ Get-Item ./data/poi.geojson
   powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1 -CsvPath ./data/poi.csv -OutPath ./data/poi.geojson
   ```
   Prüfe danach, ob die Bild-URL im GeoJSON vorhanden ist: [data/poi.geojson](data/poi.geojson).
-
-- **Quelle erzwingen für Debugging:**
-  - CSV: `?source=csv`
-  - GeoJSON: `?source=geojson`
-
+- **Nur GeoJSON:** CSV wird nicht mehr im Frontend geladen; stelle sicher, dass `data/poi.geojson` vorhanden ist.
 - **Gemischte Sprache beim Erstladen:**
   - Stelle sicher, dass DE-Spalten (`subject`, `title`, `text`, `funfact`, `category`) in der CSV befüllt sind.
   - Regeneriere GeoJSON; das Skript fällt für DE-Felder auf EN zurück, falls DE leer ist.
@@ -229,10 +223,9 @@ Get-Item ./data/poi.geojson
 
 ## First-Run Checklist
 
-- Quelle und Sprache testen:
-  - GeoJSON-DE: `index.html?source=geojson&lang=de`
-  - CSV-DE: `index.html?source=csv&lang=de`
-  - EN: `index.html?source=geojson&lang=en`
+- Sprache testen:
+  - DE: `index.html?lang=de`
+  - EN: `index.html?lang=en`
 - Popup-Inhalte beim Klick prüfen:
   - Bild sichtbar (Inline-`image` oder erstes `photos`-Bild)
   - Breadcrumb zeigt „Kategorie / Subject“ korrekt

@@ -493,146 +493,7 @@ try {
   window.addEventListener('resize', invalidate, { passive: true });
 } catch (_) {}
 
-// Parse CSV to GeoJSON (top-level), recognizing subject, title, text, funfact, image, link
-function parseCSVToGeoJSON(text) {
-  const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ';' }) : { data: [] };
-  const rows = result.data || [];
-  const features = [];
-  rows.forEach(row => {
-    const get = (k) => row[k] || (k ? row[k.toLowerCase()] : '') || '';
-    function num(v) { return parseFloat(String(v || '').replace(',', '.')); }
-    let lat = num(get('latitude') || get('lat') || get('y'));
-    let lon = num(get('longitude') || get('lon') || get('long') || get('lng') || get('x'));
-    // Auto-fix swapped coordinates (common issue: lat=13, lon=52 → Berlin)
-    if (isFinite(lat) && isFinite(lon)) {
-      const looksSwapped = Math.abs(lat) <= 35 && Math.abs(lon) >= 35;
-      if (looksSwapped) { const tmp = lat; lat = lon; lon = tmp; }
-    }
-    if (!isFinite(lat) || !isFinite(lon)) return;
-    const props = {};
-    const category = get('category') || '';
-    const subject = get('subject') || '';
-    const subject_en = get('subject_en') || '';
-    const title = get('title') || get('name') || '';
-    const title_en = get('title_en') || get('name_en') || '';
-    const text = get('text') || get('desc') || get('description') || '';
-    const text_en = get('text_en') || get('desc_en') || get('description_en') || '';
-    const funfact = get('funfact') || '';
-    const funfact_en = get('funfact_en') || '';
-    const image = get('image') || '';
-    const link = get('link') || get('website') || get('url') || '';
-    if (category) props.category = category;
-    if (subject) props.subject = subject;
-    if (subject_en) props.subject_en = subject_en;
-    if (title) props.title = title;
-    if (title_en) props.title_en = title_en;
-    if (text) props.text = text;
-    if (text_en) props.text_en = text_en;
-    if (funfact) props.funfact = funfact;
-    if (funfact_en) props.funfact_en = funfact_en;
-    if (image) { props.image = image; props.photos = [{ url: image }]; }
-    if (link) props.link = link;
-    features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
-  });
-  return { type: 'FeatureCollection', features };
-}
-
-// CSV validator: filters invalid rows and summarizes issues
-function parseCSVValidated(text) {
-  const result = (window.Papa && window.Papa.parse) ? window.Papa.parse(text, { header: true, skipEmptyLines: true, delimiter: ';' }) : { data: [] };
-  const rows = result.data || [];
-  const features = [];
-  const issues = [];
-  function num(v) { return parseFloat(String(v || '').replace(',', '.')); }
-  function maybeSwap(lat, lon) {
-    if (!isFinite(lat) || !isFinite(lon)) return [lat, lon];
-    const looksSwapped = Math.abs(lat) <= 35 && Math.abs(lon) >= 35;
-    return looksSwapped ? [lon, lat] : [lat, lon];
-  }
-  function ptInRing(lon, lat, ring) {
-    let inside = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0], yi = ring[i][1];
-      const xj = ring[j][0], yj = ring[j][1];
-      const intersect = ((yi > lat) !== (yj > lat)) &&
-                        (lon < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-12) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  }
-  function ptInPolygon(lon, lat, geom) {
-    if (!geom) return false;
-    if (geom.type === 'Polygon') {
-      const rings = geom.coordinates || [];
-      if (!rings.length) return false;
-      const insideOuter = ptInRing(lon, lat, rings[0]);
-      if (!insideOuter) return false;
-      for (let k = 1; k < rings.length; k++) { if (ptInRing(lon, lat, rings[k])) return false; }
-      return true;
-    }
-    if (geom.type === 'MultiPolygon') {
-      const polys = geom.coordinates || [];
-      for (const poly of polys) {
-        const rings = poly || [];
-        if (!rings.length) continue;
-        const insideOuter = ptInRing(lon, lat, rings[0]);
-        if (!insideOuter) continue;
-        let inHole = false;
-        for (let k = 1; k < rings.length; k++) { if (ptInRing(lon, lat, rings[k])) { inHole = true; break; } }
-        if (!inHole) return true;
-      }
-      return false;
-    }
-    return false;
-  }
-  function withinBounds(lat, lon) {
-    try {
-      if (boundaryGeoJSON && boundaryGeoJSON.features && boundaryGeoJSON.features.length) {
-        for (const f of boundaryGeoJSON.features) {
-          const g = f && f.geometry;
-          if (g && ptInPolygon(lon, lat, g)) return true;
-        }
-        return false;
-      }
-      const ll = L.latLng(lat, lon);
-      if (activeBounds && activeBounds.contains) return activeBounds.contains(ll);
-      return lat > 52 && lat < 53 && lon > 13 && lon < 14;
-    } catch (_) { return true; }
-  }
-  rows.forEach((row, idx) => {
-    const get = (k) => row[k] || (k ? row[k.toLowerCase()] : '') || '';
-    let lat = num(get('latitude') || get('lat') || get('y'));
-    let lon = num(get('longitude') || get('lon') || get('long') || get('lng') || get('x'));
-    [lat, lon] = maybeSwap(lat, lon);
-    if (!isFinite(lat) || !isFinite(lon)) { issues.push({ row: idx + 2, reason: 'Missing/invalid coordinates' }); return; }
-    if (!withinBounds(lat, lon)) { issues.push({ row: idx + 2, reason: 'Coordinates outside bounds' }); return; }
-    const props = {};
-    const category = get('category') || '';
-    const subject = get('subject') || '';
-    const subject_en = get('subject_en') || '';
-    const title = get('title') || get('name') || '';
-    const title_en = get('title_en') || get('name_en') || '';
-    const text = get('text') || get('desc') || get('description') || '';
-    const text_en = get('text_en') || get('desc_en') || get('description_en') || '';
-    const funfact = get('funfact') || '';
-    const funfact_en = get('funfact_en') || '';
-    const image = get('image') || '';
-    const link = get('link') || get('website') || get('url') || '';
-    if (category) props.category = category;
-    if (subject) props.subject = subject;
-    if (subject_en) props.subject_en = subject_en;
-    if (title) props.title = title;
-    if (title_en) props.title_en = title_en;
-    if (text) props.text = text;
-    if (text_en) props.text_en = text_en;
-    if (funfact) props.funfact = funfact;
-    if (funfact_en) props.funfact_en = funfact_en;
-    if (image) { props.image = image; props.photos = [{ url: image }]; }
-    if (link) props.link = link;
-    features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [lon, lat] } });
-  });
-  return { fc: { type: 'FeatureCollection', features }, stats: { valid: features.length, invalid: issues.length, issues } };
-}
+// CSV support removed: the app now loads POIs exclusively from pre-generated GeoJSON.
 function renderPOIFeatureCollection(fc) {
   poiLayer.clearLayers();
   poiMarkers.length = 0;
@@ -714,8 +575,6 @@ function renderPOIFeatureCollection(fc) {
 // Load/Reload POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
 function reloadPOIs(opts) {
   const toast = !!(opts && opts.toast);
-  const csvParam = getQueryParam('csv');
-  const sourceParam = (getQueryParam('source') || '').toLowerCase(); // optional: 'csv' or 'geojson'
   const cacheBust = (u) => u ? (u + (u.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now()) : u;
   function fetchWithRetry(url, options, retryOpts) {
     const retries = (retryOpts && retryOpts.retries) || 2;
@@ -734,48 +593,20 @@ function reloadPOIs(opts) {
     }
     return attempt(0);
   }
-  function tryCSV(url) {
-    const u = cacheBust(url);
-    return fetchWithRetry(u, {}, { retries: 2, timeoutMs: 5000, backoffMs: 800 })
-      .then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
-      .then(text => {
-        const res = parseCSVValidated(text);
-        const fc = res.fc;
-        if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('csv empty');
-        DATA_SOURCE = 'csv';
-        renderPOIFeatureCollection(fc);
-        if (toast) showToast(`POIs reloaded from CSV (${res.stats.valid} ok, ${res.stats.invalid} invalid)`);
-        try { console.log('POIs source:', DATA_SOURCE); } catch (_) {}
-        if (res.stats.invalid) console.warn('CSV issues:', res.stats.issues);
-        return true;
-      });
-  }
-  function tryGeoJSON() {
-    const u = cacheBust('data/poi.geojson');
-    return fetchWithRetry(u, {}, { retries: 2, timeoutMs: 5000, backoffMs: 800 })
-      .then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
-      .then(fc => {
-        if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty');
-        DATA_SOURCE = 'geojson';
-        renderPOIFeatureCollection(fc);
-        if (toast) showToast('POIs reloaded from GeoJSON');
-        try { console.log('POIs source:', DATA_SOURCE); } catch (_) {}
-        return true;
-      });
-  }
-  let chain;
-  if (sourceParam === 'geojson') {
-    chain = tryGeoJSON();
-  } else if (sourceParam === 'csv') {
-    chain = csvParam ? tryCSV(csvParam) : tryCSV('data/poi.csv');
-  } else {
-    chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
-                     : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
-  }
-  return chain.catch((err) => {
-    if (toast) showToast({ text: 'Reload failed — tap to retry', duration: 4000, onClick: function () { try { reloadPOIs({ toast: true }); } catch (_) {} } });
-    // neither CSV nor GeoJSON present; keep default view
-  });
+  const u = cacheBust('data/poi.geojson');
+  return fetchWithRetry(u, {}, { retries: 2, timeoutMs: 5000, backoffMs: 800 })
+    .then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
+    .then(fc => {
+      if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty');
+      DATA_SOURCE = 'geojson';
+      renderPOIFeatureCollection(fc);
+      if (toast) showToast('POIs reloaded from GeoJSON');
+      try { console.log('POIs source:', DATA_SOURCE); } catch (_) {}
+      return true;
+    })
+    .catch((err) => {
+      if (toast) showToast({ text: 'Reload failed — tap to retry', duration: 4000, onClick: function () { try { reloadPOIs({ toast: true }); } catch (_) {} } });
+    });
 }
 // Initial load
 reloadPOIs();
@@ -1069,7 +900,7 @@ function buildOrUpdateCategoryControl(categories) {
       });
       map.addControl(new ImportControl());
 
-      // POI CSV Import and Export controls
+      // POI Export control
       function exportPOIGeoJSON() {
         const fc = { type: 'FeatureCollection', features: [] };
         poiLayer.eachLayer(layer => {
@@ -1094,63 +925,10 @@ function buildOrUpdateCategoryControl(categories) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
-
-      function parseCSVToGeoJSON(text) {
-        return window.parseCSVToGeoJSON ? window.parseCSVToGeoJSON(text) : { type: 'FeatureCollection', features: [] };
-      }
-
-      const PoiCSVControl = L.Control.extend({
+      const PoiExportControl = L.Control.extend({
         options: { position: 'topright' },
         onAdd: function () {
           const container = L.DomUtil.create('div', 'leaflet-bar');
-          const btnCSV = L.DomUtil.create('a', '', container);
-          btnCSV.href = '#';
-          btnCSV.title = 'Import POIs from CSV';
-          btnCSV.textContent = 'CSV';
-          const fileInput = L.DomUtil.create('input', '', container);
-          fileInput.type = 'file';
-          fileInput.accept = '.csv,text/csv';
-          fileInput.style.display = 'none';
-          L.DomEvent.on(btnCSV, 'click', L.DomEvent.stopPropagation)
-                    .on(btnCSV, 'click', L.DomEvent.preventDefault)
-                    .on(btnCSV, 'click', function () { fileInput.click(); });
-          L.DomEvent.on(fileInput, 'change', function () {
-            const f = fileInput.files && fileInput.files[0];
-            if (!f) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-              try {
-                const res = parseCSVValidated(String(e.target.result));
-                const fc = res.fc;
-                poiLayer.clearLayers();
-                const markers = [];
-                fc.features.forEach(feat => {
-                  const c = feat.geometry && feat.geometry.coordinates;
-                  if (!c || c.length < 2) return;
-                  const latlng = L.latLng(c[1], c[0]);
-                  const m = L.marker(latlng);
-                  const content = buildPoiPopupContent(feat);
-                  if (isMobile()) {
-                    m.on('click', () => openMobilePopup(content));
-                  } else {
-                    m.bindPopup(content);
-                  }
-                  m.addTo(poiLayer);
-                  markers.push(m);
-                });
-                if (markers.length) {
-                  const g = L.featureGroup(markers);
-                  map.fitBounds(g.getBounds(), { padding: [20, 20] });
-                }
-                showToast(`CSV imported (${res.stats.valid} ok, ${res.stats.invalid} invalid)`);
-                if (res.stats.invalid) console.warn('CSV issues:', res.stats.issues);
-              } catch (err) {
-                console.warn('Failed to import CSV as GeoJSON', err);
-              }
-            };
-            reader.readAsText(f);
-          });
-
           const btnExport = L.DomUtil.create('a', '', container);
           btnExport.href = '#';
           btnExport.title = 'Export POIs to poi.geojson';
@@ -1158,11 +936,10 @@ function buildOrUpdateCategoryControl(categories) {
           L.DomEvent.on(btnExport, 'click', L.DomEvent.stopPropagation)
                     .on(btnExport, 'click', L.DomEvent.preventDefault)
                     .on(btnExport, 'click', exportPOIGeoJSON);
-
           return container;
         }
       });
-      map.addControl(new PoiCSVControl());
+      map.addControl(new PoiExportControl());
 
       // Reload POIs control (editorial view)
       const ReloadPOIsControl = L.Control.extend({

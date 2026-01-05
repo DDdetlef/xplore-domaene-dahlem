@@ -3,6 +3,32 @@
 Eine schlanke, multilinguale Leaflet-App mit redaktionellen Helfern für POIs der Domäne Dahlem.
 Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 
+## Inhaltsverzeichnis
+- [Features](#features)
+- [Schnellstart](#schnellstart)
+  - [Lokale Entwicklungstipps](#lokale-entwicklungstipps)
+- [Daten (POIs)](#daten-pois)
+  - [CSV → GeoJSON Konvertierung](#csv-geojson-konvertierung)
+    - [DE-Vollständigkeit und Bilder](#de-vollständigkeit-und-bilder)
+    - [Voraussetzungen](#voraussetzungen)
+    - [Standardausführung](#standardausführung)
+    - [Eigene Pfade](#eigene-pfade)
+    - [Unterstützte Spalten](#unterstützte-spalten)
+    - [Schnell testen](#schnell-testen)
+  - [CSV-Format](#csv-format)
+    - [Mehrsprachige Inhalte (DE/EN)](#mehrsprachige-inhalte-deen)
+  - [Marker & Kategorien](#marker--kategorien)
+- [Grenzen (bounds.geojson)](#grenzen-boundsgeojson)
+- [URL-Parameter (optional)](#url-parameter-optional)
+- [Performance & Robustheit (Mobil)](#performance--robustheit-mobil)
+- [Netzwerk-Robustheit](#netzwerk-robustheit)
+- [Verhalten Sprach-Umschalter](#verhalten-sprach-umschalter)
+- [Hosting](#hosting)
+- [Hinweise](#hinweise-1)
+- [Troubleshooting](#troubleshooting)
+- [First-Run Checklist](#first-run-checklist)
+- [Drittanbieter / Abhängigkeiten](#drittanbieter--abh%C3%A4ngigkeiten)
+
 ## Features
 - Marker nach Kategorie mit Symbolen (Historie, Landwirtschaft, Wildtiere/Pflanzen).
 - Kategorien-Filter als Burger-Menü (mobil einklappbar)

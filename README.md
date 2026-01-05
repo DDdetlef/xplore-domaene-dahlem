@@ -3,6 +3,8 @@
 Eine schlanke, multilinguale Leaflet-App mit redaktionellen Helfern für POIs der Domäne Dahlem.
 Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 
+[![GeoJSON Build](https://github.com/DDdetlef/xplore-domaene-dahlem/actions/workflows/geojson.yml/badge.svg)](https://github.com/DDdetlef/xplore-domaene-dahlem/actions/workflows/geojson.yml)
+
 ## Inhaltsverzeichnis
 - [Features](#features)
 - [Schnellstart](#schnellstart)

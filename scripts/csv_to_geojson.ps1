@@ -82,11 +82,14 @@ foreach ($row in $rows) {
   if ($tagsS) { $props.tags = SplitList $tagsS }
   $photosS = GetVal $row @('photos','images','image')
   if ($photosS) {
-    $urls = SplitList $photosS
+    $urls = @(SplitList $photosS)
     $props.photos = @()
     foreach ($u in $urls) { $props.photos += @{ url = $u } }
-    # also expose first image as 'image'
-    if ($urls.Count -gt 0) { $props.image = $urls[0] }
+    # also expose first image as 'image' (handle single-string case)
+    if ($urls -and ($urls | Measure-Object).Count -gt 0) {
+      $firstUrl = ($urls | Select-Object -First 1)
+      $props.image = "$firstUrl"
+    }
   }
   $funfact = GetVal $row @('funfact')
   $funfact_en = GetVal $row @('funfact_en')

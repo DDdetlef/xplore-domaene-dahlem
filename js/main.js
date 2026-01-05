@@ -220,9 +220,11 @@ function updateMinZoomForBounds() {
     const currentMax = (typeof maxZoomMap === 'number' ? maxZoomMap : (map.getMaxZoom ? map.getMaxZoom() : 22)) || 22;
     const clamped = isFinite(z) ? Math.max(0, Math.min(z, currentMax)) : null;
     if (clamped !== null) {
-      map.setMinZoom(clamped);
-      // If current zoom is lower than allowed min, bump it up
-      if (map.getZoom && map.getZoom() < clamped) { map.setZoom(clamped); }
+      const currentZoom = map.getZoom ? map.getZoom() : null;
+      // Never raise minZoom above current zoom level determined by fitBounds
+      const targetMin = (currentZoom !== null && isFinite(currentZoom)) ? Math.min(clamped, currentZoom) : clamped;
+      map.setMinZoom(targetMin);
+      // Do not force a zoom-in here; we want the full bbox visible after fitBounds
     }
   } catch (_) {}
 }

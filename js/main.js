@@ -358,14 +358,25 @@ parseInitialCategories();
 function esc(s) {
   return String(s || '').replace(/[&<>"]+/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
+// Allowlist external URLs: only http/https (relative URLs are resolved against current origin)
+function sanitizeUrl(url) {
+  try {
+    const raw = String(url || '').trim();
+    if (!raw) return '';
+    // Resolve relative URLs against current origin
+    const u = new URL(raw, window.location.origin);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+    return '';
+  } catch (_) { return ''; }
+}
 function buildPhotos(props) {
   const p = props.photos || props.images || [];
   if (!Array.isArray(p) || p.length === 0) return '';
   const items = p.map((x) => {
-    const url = typeof x === 'string' ? x : String(x && x.url || '');
+    const url = sanitizeUrl(typeof x === 'string' ? x : String(x && x.url || ''));
     const label = typeof x === 'string' ? '' : String(x && (x.label || x.title || ''));
     if (!url) return '';
-    return `<a class=\"foto-icon\" href=\"${esc(url)}\" target=\"_blank\" rel=\"noopener\" title=\"${esc(label)}\"><i class=\"fa fa-camera\"></i></a>`;
+    return `<a class=\"foto-icon\" href=\"${esc(url)}\" target=\"_blank\" rel=\"noopener noreferrer\" title=\"${esc(label)}\"><i class=\"fa fa-camera\"></i></a>`;
   }).filter(Boolean).join('');
   if (!items) return '';
   return `<div class=\"popup-fotos\">${items}</div>`;
@@ -373,11 +384,11 @@ function buildPhotos(props) {
 
 function getPrimaryImage(props) {
   const im = (props && props.image) || '';
-  if (im) return String(im);
+  if (im) return sanitizeUrl(String(im));
   const p = (props && (props.photos || props.images)) || [];
   if (Array.isArray(p) && p.length > 0) {
     const x = p[0];
-    return typeof x === 'string' ? x : String((x && x.url) || '');
+    return sanitizeUrl(typeof x === 'string' ? x : String((x && x.url) || ''));
   }
   return '';
 }
@@ -433,7 +444,7 @@ function buildPoiPopupContent(f) {
   const text = pickLang(props.text || props.desc || props.description || '', props.text_en || props.desc_en || props.description_en || '');
   const funfact = pickLang(props.funfact || '', props.funfact_en || '');
   const image = getPrimaryImage(props);
-  const link = props.link || props.url || props.website || '';
+  const link = sanitizeUrl(props.link || props.url || props.website || '');
 
   const parts = [];
   const breadcrumb = categoryLabel && subject ? `${categoryLabel} / ${subject}` : (categoryLabel || subject);
@@ -453,7 +464,7 @@ function buildPoiPopupContent(f) {
   if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\" loading=\"lazy\" decoding=\"async\" /></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]
   if (photos) parts.push(photos);
-  if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener\">${esc(t('more_info'))}</a></div>`);
+  if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener noreferrer\">${esc(t('more_info'))}</a></div>`);
   const html = parts.join('');
   return `<div>${html}</div>`;
 }

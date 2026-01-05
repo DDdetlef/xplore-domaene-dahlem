@@ -93,9 +93,41 @@ This document outlines pragmatic next steps to evolve the Domäne Dahlem map, fo
 - Error reporting: capture and summarize fetch errors (no PII)
 
 ## Security
-- Content Security Policy suggestion in [index.html](index.html)
-- Sanitize popup content (kept) and ensure no HTML injection from data
-- Prefer SRI for third-party CDNs when possible
+- Data & XSS
+  - URL allowlist for external links and images: only `http:`/`https:` schemes; block `javascript:` and other unexpected schemes (validate in CI).
+  - Keep strict escaping via `esc()` for all data-driven text; avoid injecting raw HTML.
+  - Ensure markup passed to `innerHTML` is assembled from escaped pieces; no raw data fragments.
+  - External links: add `rel="noopener noreferrer"` to prevent tab-nabbing and referrer leakage.
+- Third-Party Scripts
+  - Add SRI and pinned versions for Leaflet plugins (AwesomeMarkers, Draw, MarkerCluster, Providers) in [index.html](index.html), or self-host vendor JS/CSS to reduce supply-chain risk.
+- Transport & Referrer
+  - Enforce HTTPS to avoid mixed content and MITM; prefer hosting that serves strictly over TLS.
+  - Add `Referrer-Policy: no-referrer` (or `strict-origin-when-cross-origin`) to minimize sensitive URL leakage.
+- Content Security Policy (CSP)
+  - Add CSP header/meta, tuned for current CDNs and tiles:
+    - Example: `default-src 'self'; script-src 'self' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; img-src 'self' https: data:; connect-src 'self' https:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; upgrade-insecure-requests`.
+  - Adjust `img-src`/`connect-src` for self-hosted tiles or additional domains as needed.
+- Tile Providers & API Keys
+  - Avoid exposing unrestricted API keys via `?apikey=`; use domain-restricted keys or a simple proxy if necessary.
+  - Consider allowlisting trusted `provider` values to prevent loading malicious tiles.
+- DoS & Resource Limits
+  - CI checks to cap [data/poi.geojson](data/poi.geojson) size and feature count; fail builds on excessive growth.
+  - Prefer optimized images; set informal per-image size limits; keep timeouts/backoff in network code.
+- File Import (bounds)
+  - Limit file size for imported `bounds.geojson` and run a basic GeoJSON schema/geometry check before rendering.
+- Clickjacking
+  - Prevent embedding via CSP `frame-ancestors 'none'` (or `X-Frame-Options: DENY`).
+- Logging & PII
+  - Avoid logging API keys, tokens, or PII; keep production console logs minimal.
+- Service Worker (future)
+  - If added: constrain scope, validate cached responses, version assets carefully, and avoid caching sensitive URLs.
+
+### Security – Practical Next Steps
+- Add a small URL-allowlist helper in [js/main.js](js/main.js) and apply it for `href` and image `src` before rendering.
+- Append `rel="noreferrer"` to all external links in popups (in addition to `noopener`).
+- Add SRI hashes for all CDN includes in [index.html](index.html), or self-host vendor assets.
+- Add CSP and Referrer-Policy headers (or `<meta http-equiv>` for static hosting).
+- Extend CI to validate allowed URL schemes in `poi.geojson`, and to enforce max feature/file sizes.
 
 ## Backlog Ideas
 - Edit mode improvements: import/export POIs with lightweight editor

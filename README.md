@@ -30,6 +30,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - [Troubleshooting](#troubleshooting)
 - [First-Run Checklist](#first-run-checklist)
 - [Drittanbieter / Abhängigkeiten](#drittanbieter--abh%C3%A4ngigkeiten)
+- [Roadmap](#roadmap)
 
 ## Features
 - Marker nach Kategorie mit Symbolen (Historie, Landwirtschaft, Wildtiere/Pflanzen).
@@ -235,3 +236,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
   - Diverse Drittanbieter aus leaflet-providers; ggf. API-Key nötig; eigene Nutzungsbedingungen beachten.
 - Externe Inhalte aus Daten
   - Bilder/Links aus CSV/GeoJSON (z. B. `www.domaene-dahlem.de`, `live.staticflickr.com`/`flickr.com`) werden direkt vom jeweiligen Host geladen.
+
+## Roadmap
+
+Für geplante Verbesserungen und priorisierte Empfehlungen siehe [ROADMAP.md](ROADMAP.md).

@@ -24,7 +24,6 @@ jobs:
       - name: Convert CSV to GeoJSON
         shell: pwsh
         run: |
-          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
           ./scripts/csv_to_geojson.ps1 -CsvPath ./data/poi.csv -OutPath ./data/poi.geojson
 
       - name: Validate feature count

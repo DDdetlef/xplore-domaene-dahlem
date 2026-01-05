@@ -123,8 +123,8 @@ This document outlines pragmatic next steps to evolve the Domäne Dahlem map, fo
   - If added: constrain scope, validate cached responses, version assets carefully, and avoid caching sensitive URLs.
 
 ### Security – Practical Next Steps
-- Add a small URL-allowlist helper in [js/main.js](js/main.js) and apply it for `href` and image `src` before rendering.
-- Append `rel="noreferrer"` to all external links in popups (in addition to `noopener`).
+- ~~Add a small URL-allowlist helper in [js/main.js](js/main.js) and apply it for `href` and image `src` before rendering.~~
+- ~~Append `rel="noreferrer"` to all external links in popups (in addition to `noopener`).~~
 - Add SRI hashes for all CDN includes in [index.html](index.html), or self-host vendor assets.
 - Add CSP and Referrer-Policy headers (or `<meta http-equiv>` for static hosting).
 - Extend CI to validate allowed URL schemes in `poi.geojson`, and to enforce max feature/file sizes.

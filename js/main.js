@@ -16,7 +16,7 @@ function getNetworkContext() {
 const NET = getNetworkContext();
 
 const map = L.map('map', {
-  maxBoundsViscosity: 0.8,
+  maxBoundsViscosity: 1.0,
   preferCanvas: !!NET.lowEnd,
   fadeAnimation: !NET.lowEnd,
   zoomAnimation: !NET.lowEnd
@@ -173,11 +173,11 @@ let activeBounds = null;
 let boundaryGeoJSON = null; // precise polygon for containment checks
 if (bbox) {
   activeBounds = bbox;
-  map.setMaxBounds(activeBounds);
+  map.setMaxBounds(activeBounds.pad(0.01));
   map.fitBounds(activeBounds, { padding: [20, 20] });
 } else if (DEFAULT_BBOX_DOMAENE_DAHLEM) {
   activeBounds = DEFAULT_BBOX_DOMAENE_DAHLEM;
-  map.setMaxBounds(activeBounds);
+  map.setMaxBounds(activeBounds.pad(0.01));
   map.fitBounds(activeBounds, { padding: [20, 20] });
 } else {
   map.setView([52.52, 13.405], 11);
@@ -186,6 +186,27 @@ if (bbox) {
 // Dev bbox overlay removed per request
 
 const baseLayer = addBaseLayerFromProvider();
+// Ensure map maxZoom does not exceed layer maxZoom when not explicitly set
+try {
+  const layerMax = (baseLayer && baseLayer.options && baseLayer.options.maxZoom) || 19;
+  if (typeof maxZoomMap !== 'number') { map.setMaxZoom(layerMax); }
+} catch (_) {}
+
+// Extra safety: clamp view back inside active bounds after user interactions
+function clampViewToActiveBounds() {
+  try {
+    if (activeBounds && activeBounds.contains) {
+      const c = map.getCenter();
+      if (!activeBounds.contains(c)) {
+        map.panInsideBounds(activeBounds, { animate: false });
+      }
+    }
+  } catch (_) {}
+}
+try {
+  map.on('dragend', clampViewToActiveBounds);
+  map.on('zoomend', clampViewToActiveBounds);
+} catch (_) {}
 // Show connection-aware hint for Save-Data or low-end connections
 try {
   if (NET && (NET.lowEnd || NET.saveData)) {
@@ -841,8 +862,8 @@ function buildOrUpdateCategoryControl(categories) {
       const b = layer.getBounds && layer.getBounds();
       if (b && b.isValid && b.isValid()) {
         activeBounds = b;
-        // Clamp map movement to the polygon bounds with a generous pad
-        map.setMaxBounds(b.pad(0.02));
+        // Clamp map movement to the polygon bounds with a small pad for UX
+        map.setMaxBounds(b.pad(0.01));
         // Add extra top padding to ensure the polygon isn't clipped by controls
         map.fitBounds(b, { paddingTopLeft: [20, 60], paddingBottomRight: [20, 20] });
         // Ensure proper sizing if assets changed layout

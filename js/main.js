@@ -206,14 +206,33 @@ if (typeof minZoom === 'number') map.setMinZoom(minZoom);
 if (typeof maxZoomMap === 'number') map.setMaxZoom(maxZoomMap);
 let activeBounds = null;
 let boundaryGeoJSON = null; // precise polygon for containment checks
+// Compute and apply a minZoom so the map cannot zoom out beyond the (padded) active bounds
+function updateMinZoomForBounds() {
+  try {
+    // Respect explicit ?minzoom= parameter if provided
+    if (typeof minZoom === 'number') return;
+    if (!activeBounds || !activeBounds.isValid || !activeBounds.isValid()) return;
+    // Fit to a slightly padded bounds to show a bit of neighbourhood when fully zoomed out
+    const padded = activeBounds.pad(MAX_BOUNDS_PAD);
+    // 'inside' true => the zoom that fits the given bounds fully inside the view
+    const z = map.getBoundsZoom(padded, true);
+    if (isFinite(z)) {
+      map.setMinZoom(z);
+      // If current zoom is lower than allowed min, bump it up
+      if (map.getZoom && map.getZoom() < z) { map.setZoom(z); }
+    }
+  } catch (_) {}
+}
 if (bbox) {
   activeBounds = bbox;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
+  updateMinZoomForBounds();
 } else if (DEFAULT_BBOX_DOMAENE_DAHLEM) {
   activeBounds = DEFAULT_BBOX_DOMAENE_DAHLEM;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
+  updateMinZoomForBounds();
 } else {
   map.setView([52.52, 13.405], 11);
 }
@@ -510,7 +529,7 @@ function debounce(fn, wait) {
   };
 }
 try {
-  const invalidate = debounce(function () { try { map.invalidateSize(); } catch (_) {} }, 120);
+  const invalidate = debounce(function () { try { map.invalidateSize(); updateMinZoomForBounds(); } catch (_) {} }, 120);
   window.addEventListener('orientationchange', invalidate, { passive: true });
   window.addEventListener('resize', invalidate, { passive: true });
 } catch (_) {}

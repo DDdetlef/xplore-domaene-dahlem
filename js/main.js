@@ -335,8 +335,20 @@ function formatTextToHTML(raw) {
 function buildPoiPopupContent(f) {
   const props = f && f.properties ? f.properties : {};
   function pickLang(deVal, enVal) { return currentLang === 'en' ? (enVal || deVal || '') : (deVal || enVal || ''); }
-  // Show subject if available, otherwise fall back to category label
-  const subject = pickLang(props.subject || props.category || '', props.subject_en || '');
+  // Subject and category, shown as breadcrumb "Category / Subject"
+  const subject = pickLang(props.subject || '', props.subject_en || '');
+  function categoryToLabel(cat) {
+    const s = String(cat || '').trim();
+    if (!s) return '';
+    const low = s.toLowerCase();
+    if (currentLang === 'en') {
+      if (low === 'historie') return 'History';
+      if (low === 'landwirtschaft') return 'Agriculture';
+      if (low.includes('wildtier') || low.includes('wildtiere') || low.includes('pflanze') || low.includes('pflanzen')) return 'Wildlife';
+    }
+    return s;
+  }
+  const categoryLabel = categoryToLabel(props.category);
   const title = pickLang(props.title || props.name || '', props.title_en || props.name_en || '');
   const text = pickLang(props.text || props.desc || props.description || '', props.text_en || props.desc_en || props.description_en || '');
   const funfact = pickLang(props.funfact || '', props.funfact_en || '');
@@ -344,7 +356,8 @@ function buildPoiPopupContent(f) {
   const link = props.link || props.url || props.website || '';
 
   const parts = [];
-  if (subject) parts.push(`<div><strong>${esc(subject)}</strong></div>`);
+  const breadcrumb = categoryLabel && subject ? `${categoryLabel} / ${subject}` : (categoryLabel || subject);
+  if (breadcrumb) parts.push(`<div><strong>${esc(breadcrumb)}</strong></div>`);
   if (title) parts.push(`<h3 style=\"margin:4px 0\">${esc(title)}</h3>`);
   if (text) parts.push(formatTextToHTML(text));
   if (funfact) parts.push(`<div><strong>${esc(t('funfact_label'))}</strong> ${esc(funfact)}</div>`);

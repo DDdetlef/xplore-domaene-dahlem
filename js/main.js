@@ -77,9 +77,7 @@ function setLanguage(lang) {
 
   try { if (Array.isArray(lastCategoryList) && lastCategoryList.length) buildOrUpdateCategoryControl(lastCategoryList); } catch (_) {}
 
-  // Close existing popups to avoid stale content
-  try { closeMobilePopup(); } catch (_) {}
-  try { map.closePopup && map.closePopup(); } catch (_) {}
+  // Do not forcibly close popups here; we'll update in-place if one is open
 
   // Refresh marker popup contents and click handlers
   try {
@@ -116,17 +114,31 @@ function setLanguage(lang) {
     });
   } catch (_) {}
 
-  // Reopen last clicked marker popup only if a popup was previously open
+  // Update last clicked marker popup only if a popup was previously open
   try {
     if (lastClickedMarker && lastClickedMarker.feature && (wasMobileOpen || wasMarkerPopupOpen)) {
       const content = buildPoiPopupContent(lastClickedMarker.feature);
       if (isMobile()) {
-        openMobilePopup(content);
-      } else if (lastClickedMarker.openPopup) {
-        if (lastClickedMarker.getPopup && lastClickedMarker.getPopup()) {
-          lastClickedMarker.getPopup().setContent(content);
+        // Update mobile overlay content without closing
+        if (mobilePopupBodyEl) { try { mobilePopupBodyEl.innerHTML = content; } catch (_) {} }
+        else { openMobilePopup(content); }
+      } else if (wasMarkerPopupOpen) {
+        // Desktop: update the existing popup content; keep it open
+        const p = lastClickedMarker.getPopup && lastClickedMarker.getPopup();
+        if (p && p.setContent) {
+          try { p.setContent(content); } catch (_) {}
+        } else if (lastClickedMarker.bindPopup) {
+          // Fallback in case popup instance was missing
+          const maxW = Math.min(360, Math.floor(window.innerWidth * 0.92));
+          const popupOpts = {
+            maxWidth: maxW,
+            autoPan: true,
+            keepInView: true,
+            autoPanPaddingTopLeft: L.point(30, 120),
+            autoPanPaddingBottomRight: L.point(30, 50)
+          };
+          try { lastClickedMarker.bindPopup(content, popupOpts); } catch (_) {}
         }
-        lastClickedMarker.openPopup();
       }
     }
   } catch (_) {}

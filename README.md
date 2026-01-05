@@ -257,9 +257,6 @@ Get-Item ./data/poi.geojson
 - Font Awesome 4.7 (Icons)
   - CSS via CDN: cdnjs.com
   - https://fontawesome.com/v4.7/
-- PapaParse (CSV-Parser)
-  - JS via CDN: cdnjs.com
-  - https://www.papaparse.com/
 - Kartenkacheln (Default)
   - OpenStreetMap Standard: https://tile.openstreetmap.org (Attribution erforderlich)
   - Nutzungsbedingungen/Policies beachten.

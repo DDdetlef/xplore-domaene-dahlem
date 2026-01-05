@@ -1,0 +1,58 @@
+name: Auto-Generate GeoJSON from CSV
+
+on:
+  push:
+    paths:
+      - 'data/poi.csv'
+  pull_request:
+    paths:
+      - 'data/poi.csv'
+
+permissions:
+  contents: write
+
+jobs:
+  build-geojson:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Convert CSV to GeoJSON
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+          ./scripts/csv_to_geojson.ps1 -CsvPath ./data/poi.csv -OutPath ./data/poi.geojson
+
+      - name: Validate feature count
+        shell: pwsh
+        run: |
+          if (!(Test-Path ./data/poi.geojson)) {
+            Write-Error "data/poi.geojson not found after conversion"
+            exit 1
+          }
+          $json = Get-Content ./data/poi.geojson -Raw | ConvertFrom-Json
+          if ($null -eq $json -or $null -eq $json.features) {
+            Write-Error "Invalid GeoJSON: missing features array"
+            exit 1
+          }
+          $count = $json.features.Count
+          Write-Host "GeoJSON features: $count"
+          if ($count -lt 1) {
+            Write-Error "Invalid GeoJSON: feature count < 1"
+            exit 1
+          }
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add data/poi.geojson
+            git commit -m "CI: regenerate poi.geojson from CSV"
+            git push
+          fi

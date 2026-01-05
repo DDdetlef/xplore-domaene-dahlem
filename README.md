@@ -13,6 +13,9 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - Robuste Koordinaten-Verarbeitung (Dezimal-Komma, Auto-Swap lat/lon).
 - Multilingual (DE/EN)
 - Optionaler Tile-Provider per URL (`?provider=...&apikey=...`), Fallback OSM.
+ - Verbindungssensitiv: Hinweis bei Datensparmodus/niedriger Verbindung.
+ - Ressourcenschonend auf Low-End-Geräten (Canvas, reduzierte Animationen, geringerer Max-Zoom).
+ - Stabileres Laden: Netzwerk-Timeouts, Retries und "Tap to retry"-Hinweis.
 
 ## Schnellstart
 - Live-Demo: https://dddetlef.github.io/xplore-domaene-dahlem/
@@ -27,6 +30,11 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
     npx serve . -p 8080
     ```
 - Edit-Modus: `index.html?edit=1` blendet Export/Import/Reload-Knöpfe ein.
+
+### Lokale Entwicklungstipps
+- Ein einfacher Webserver ist nötig (wegen `fetch()` für CSV/GeoJSON). Siehe oben.
+- Browser-Cache vermeiden: Entwicklungs-URL hat Cache-Busting; ansonsten `Ctrl+F5`.
+- DevTools → Network → Throttling („Slow 3G“), um Save-Data/Niedrig-Verbindung zu simulieren.
 
 ## Daten (POIs)
 
@@ -130,6 +138,23 @@ Get-Item ./data/poi.geojson
 - `bbox=minLon,minLat,maxLon,maxLat`
 - `metrics=1` zeigt eine einfache Tile-Metrik-HUD.
 - `lang=en` schaltet die UI auf Englisch (DE/EN Umschalter oben rechts).
+
+## Performance & Robustheit (Mobil)
+- Save-Data/Low-End-Erkennung: Nutzt `navigator.connection` (falls vorhanden), zeigt Hinweis und passt Verhalten an.
+- Tile-Last reduzieren: `maxZoom` wird auf Low-End/Save-Data begrenzt (z. B. 17), um weniger und kleinere Tiles zu laden.
+- Renderer/Animationen: Canvas-Renderer bevorzugt und Kartenanimationen reduziert auf Low-End.
+- Bilder: Popup-Bilder mit `loading="lazy"` und `decoding="async"` für flüssigeres Scrollen.
+- Layout-Stabilität: Debounced `resize`/`orientationchange` führt zu ruhigerem Re-Layout der Karte.
+- Overscroll-Schutz: `overscroll-behavior` verhindert Hintergrund-Scrollen bei offenem mobilen Overlay.
+
+## Netzwerk-Robustheit
+- CSV/GeoJSON-Laden mit Retry, Timeout und Backoff.
+- Bei Fehlern: Toast mit "Reload failed — tap to retry" (antippen, um erneut zu laden).
+
+## Verhalten Sprach-Umschalter
+- Beim Umschalten der Sprache werden Inhalte aktualisiert.
+- Falls ein Popup offen war, wird es nach dem Umschalten erneut geöffnet (mit neuer Sprache).
+- Wenn kein Popup offen war, bleibt es geschlossen (keine unerwartete Öffnung).
 
 ## Hosting
 - GitHub Pages: Repo → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.

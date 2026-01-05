@@ -1,6 +1,26 @@
 // xplore Domäne Dahlem - Leaflet app with provider switch, bbox/zoom limits, and tile metrics
 
-const map = L.map('map', { maxBoundsViscosity: 0.8 });
+// Network and device context (Save-Data / low-end detection)
+function getNetworkContext() {
+  try {
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const saveData = !!(c && c.saveData);
+    const effectiveType = (c && c.effectiveType) || '';
+    const downlink = (c && typeof c.downlink === 'number') ? c.downlink : null; // Mbps
+    const lowEnd = saveData || effectiveType.includes('2g') || effectiveType.includes('slow-2g') || (typeof downlink === 'number' && downlink < 1);
+    return { saveData, effectiveType, downlink, lowEnd };
+  } catch (_) {
+    return { saveData: false, effectiveType: '', downlink: null, lowEnd: false };
+  }
+}
+const NET = getNetworkContext();
+
+const map = L.map('map', {
+  maxBoundsViscosity: 0.8,
+  preferCanvas: !!NET.lowEnd,
+  fadeAnimation: !NET.lowEnd,
+  zoomAnimation: !NET.lowEnd
+});
 
 // Default BBox for Domäne Dahlem (from OSM Nominatim)
 // Format: L.latLngBounds([minLat, minLon], [maxLat, maxLon])
@@ -29,8 +49,8 @@ function detectLanguage() {
 let currentLang = detectLanguage();
 function t(key) {
   const dict = {
-    de: { back: 'Zurück', filter: 'Filter', category: 'Kategorie', all: 'Alle', funfact_label: 'Fun Fact:', more_info: 'Mehr Infos' },
-    en: { back: 'Back',   filter: 'Filter', category: 'Category', all: 'All',  funfact_label: 'Fun fact:', more_info: 'More info' }
+    de: { back: 'Zurück', filter: 'Filter', category: 'Kategorie', all: 'Alle', funfact_label: 'Fun Fact:', more_info: 'Mehr Infos', data_saver_hint: 'Datensparmodus aktiv — geringere Details' },
+    en: { back: 'Back',   filter: 'Filter', category: 'Category', all: 'All',  funfact_label: 'Fun fact:', more_info: 'More info', data_saver_hint: 'Data Saver active — reduced detail' }
   };
   const d = dict[currentLang] || dict.de;
   return d[key] || key;
@@ -119,6 +139,8 @@ function addBaseLayerFromProvider() {
   const providerName = getQueryParam('provider');
   const maxZoomParam = getQueryParam('maxzoom');
   const apiKey = getQueryParam('apikey');
+  const requestedMaxZoom = maxZoomParam ? Math.max(0, Math.min(22, parseInt(maxZoomParam, 10) || 19)) : 19;
+  const maxZoom = (NET.lowEnd || NET.saveData) ? Math.min(requestedMaxZoom, 17) : requestedMaxZoom;
   
   if (providerName && L && L.tileLayer && typeof L.tileLayer.provider === 'function') {
     try {
@@ -132,7 +154,7 @@ function addBaseLayerFromProvider() {
   }
 
   const layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: maxZoom,
     attribution: '&copy; OpenStreetMap-Mitwirkende'
   }).addTo(map);
   return layer;
@@ -164,6 +186,12 @@ if (bbox) {
 // Dev bbox overlay removed per request
 
 const baseLayer = addBaseLayerFromProvider();
+// Show connection-aware hint for Save-Data or low-end connections
+try {
+  if (NET && (NET.lowEnd || NET.saveData)) {
+    showToast({ text: t('data_saver_hint'), duration: 5000 });
+  }
+} catch (_) {}
 
 // Simple tile metrics (only if ?metrics=1)
 const enableMetrics = getQueryParam('metrics') === '1';
@@ -220,10 +248,25 @@ function showToast(msg) {
   try {
     const el = document.getElementById('boot-log');
     if (!el) return;
-    el.textContent = String(msg || '');
+    const text = (typeof msg === 'string') ? msg : String((msg && msg.text) || '');
+    const duration = (msg && msg.duration) ? msg.duration : 2000;
+    el.textContent = text;
     el.style.display = 'block';
+    el.style.cursor = (msg && typeof msg.onClick === 'function') ? 'pointer' : '';
     if (el._hideTimer) clearTimeout(el._hideTimer);
-    el._hideTimer = setTimeout(() => { try { el.style.display = 'none'; } catch (_) {} }, 2000);
+    if (el._clickHandler) { try { el.removeEventListener('click', el._clickHandler); } catch (_) {} }
+    if (msg && typeof msg.onClick === 'function') {
+      el._clickHandler = function () { try { msg.onClick(); } catch (_) {} };
+      el.addEventListener('click', el._clickHandler);
+    } else {
+      el._clickHandler = null;
+    }
+    el._hideTimer = setTimeout(() => {
+      try {
+        el.style.display = 'none';
+        if (el._clickHandler) { el.removeEventListener('click', el._clickHandler); el._clickHandler = null; }
+      } catch (_) {}
+    }, duration);
   } catch (_) {}
 }
 
@@ -317,12 +360,19 @@ if (mobilePopupBackEl) {
 // Initialize language-dependent UI text (back button)
 setLanguage(currentLang);
 
-// Improve mobile robustness: ensure map resizes correctly on viewport changes
+// Improve mobile robustness: ensure map resizes correctly on viewport changes (debounced)
+function debounce(fn, wait) {
+  let t = null;
+  return function () {
+    const ctx = this, args = arguments;
+    if (t) clearTimeout(t);
+    t = setTimeout(function () { fn.apply(ctx, args); }, wait);
+  };
+}
 try {
-  window.addEventListener('orientationchange', function () { try { map.invalidateSize(); } catch (_) {} }, { passive: true });
-} catch (_) {}
-try {
-  window.addEventListener('resize', function () { try { map.invalidateSize(); } catch (_) {} }, { passive: true });
+  const invalidate = debounce(function () { try { map.invalidateSize(); } catch (_) {} }, 120);
+  window.addEventListener('orientationchange', invalidate, { passive: true });
+  window.addEventListener('resize', invalidate, { passive: true });
 } catch (_) {}
 
 // Parse CSV to GeoJSON (top-level), recognizing subject, title, text, funfact, image, link
@@ -538,9 +588,27 @@ function reloadPOIs(opts) {
   const toast = !!(opts && opts.toast);
   const csvParam = getQueryParam('csv');
   const cacheBust = (u) => u ? (u + (u.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now()) : u;
+  function fetchWithRetry(url, options, retryOpts) {
+    const retries = (retryOpts && retryOpts.retries) || 2;
+    const timeoutMs = (retryOpts && retryOpts.timeoutMs) || 5000;
+    const backoffMs = (retryOpts && retryOpts.backoffMs) || 600;
+    function attempt(n) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => { try { ctrl.abort(); } catch (_) {} }, timeoutMs);
+      const o = Object.assign({}, options || {}, { signal: ctrl.signal });
+      return fetch(url, o).finally(() => { clearTimeout(t); }).catch(err => {
+        if (n < retries) {
+          return new Promise(res => setTimeout(res, backoffMs * (n + 1))).then(() => attempt(n + 1));
+        }
+        throw err;
+      });
+    }
+    return attempt(0);
+  }
   function tryCSV(url) {
     const u = cacheBust(url);
-    return fetch(u).then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
+    return fetchWithRetry(u, {}, { retries: 2, timeoutMs: 5000, backoffMs: 800 })
+      .then(r => { if (!r.ok) throw new Error('csv not found'); return r.text(); })
       .then(text => {
         const res = parseCSVValidated(text);
         const fc = res.fc;
@@ -553,12 +621,16 @@ function reloadPOIs(opts) {
   }
   function tryGeoJSON() {
     const u = cacheBust('data/poi.geojson');
-    return fetch(u).then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
+    return fetchWithRetry(u, {}, { retries: 2, timeoutMs: 5000, backoffMs: 800 })
+      .then(r => { if (!r.ok) throw new Error('poi.geojson not found'); return r.json(); })
       .then(fc => { if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) throw new Error('poi empty'); renderPOIFeatureCollection(fc); if (toast) showToast('POIs reloaded'); return true; });
   }
   const chain = csvParam ? tryCSV(csvParam).catch(() => tryGeoJSON())
                          : tryCSV('data/poi.csv').catch(() => tryGeoJSON());
-  return chain.catch((err) => { if (toast) showToast('Reload failed'); /* neither CSV nor GeoJSON present; keep default view */ });
+  return chain.catch((err) => {
+    if (toast) showToast({ text: 'Reload failed — tap to retry', duration: 4000, onClick: function () { try { reloadPOIs({ toast: true }); } catch (_) {} } });
+    // neither CSV nor GeoJSON present; keep default view
+  });
 }
 // Initial load
 reloadPOIs();

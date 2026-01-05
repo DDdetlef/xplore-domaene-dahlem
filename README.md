@@ -42,6 +42,11 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - Zweck: CSV-POIs in eine GeoJSON-FeatureCollection umwandeln für Hosting/Versionierung.
 - Skript: siehe `scripts/csv_to_geojson.ps1`.
 
+#### DE-Vollständigkeit und Bilder
+- Das Skript mappt Inhalte DE-first: `title`, `text`, `subject`, `category` werden bevorzugt aus DE-Spalten übernommen und fallen auf EN zurück, wenn DE leer ist. Zusätzlich werden `*_en`-Felder gesetzt, sofern vorhanden.
+- Bilder: Aus `photos`/`images` wird die erste URL als `image` übernommen, sodass Popups beim Erststart auch mit GeoJSON ein Inline-Bild anzeigen.
+- Ergebnis: GeoJSON enthält vollständige DE-Inhalte und Bild-URL, wodurch gemischte Sprachen und fehlende Bilder beim Erstladen vermieden werden.
+
 #### Voraussetzungen
 - Windows/PowerShell (oder `pwsh` plattformübergreifend).
 - CSV mit Semikolon (`;`) als Trennzeichen.
@@ -82,7 +87,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1
 - Eigenschaften: `title`/`name`, `desc`/`description`, `address`, `hours`/`opening_hours`, `website`/`link`/`url`, `category`/`subject`, `tags`, `photos`/`images` (Listen per `;` oder `,`).
 
 #### Hinweise
-- Nach der Konvertierung lädt die App weiterhin bevorzugt `data/poi.csv`. Für GeoJSON-Nutzung CSV umbenennen/entfernen, damit `data/poi.geojson` geladen wird.
+- Nach der Konvertierung lädt die App weiterhin bevorzugt `data/poi.csv`. Für GeoJSON-Nutzung CSV umbenennen/entfernen, damit `data/poi.geojson` geladen wird. Alternativ kann per URL-Parameter die Quelle erzwungen werden (siehe unten).
 - Bei Dezimal-Komma in Koordinaten vorab zu Dezimalpunkt konvertieren.
 - Das Skript gibt die Anzahl der geschriebenen Features aus.
 
@@ -133,6 +138,7 @@ Get-Item ./data/poi.geojson
 ## URL-Parameter (optional)
 - `provider=OpenTopoMap` oder `Thunderforest.Outdoors&apikey=DEIN_KEY`
 - `csv=https://.../datei.csv`
+- `source=csv` oder `source=geojson` erzwingt die Datenquelle (Standard: CSV, Fallback GeoJSON)
 - `category=Historie;Landwirtschaft`
 - `minzoom=..&maxzoom=..`
 - `bbox=minLon,minLat,maxLon,maxLat`
@@ -164,3 +170,53 @@ Get-Item ./data/poi.geojson
 - OSM/Provider-Credits sichtbar lassen (Attribution).
 - API-Keys nicht committen; per Server/ENV oder temporär in der URL.
 - HTTPS empfohlen.
+
+## Troubleshooting
+
+- **Bilder fehlen beim Erststart:** Regeneriere GeoJSON aus der CSV, damit `image` korrekt gesetzt ist.
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/csv_to_geojson.ps1 -CsvPath ./data/poi.csv -OutPath ./data/poi.geojson
+  ```
+  Prüfe danach, ob die Bild-URL im GeoJSON vorhanden ist: [data/poi.geojson](data/poi.geojson).
+
+- **Quelle erzwingen für Debugging:**
+  - CSV: `?source=csv`
+  - GeoJSON: `?source=geojson`
+
+- **Gemischte Sprache beim Erstladen:**
+  - Stelle sicher, dass DE-Spalten (`subject`, `title`, `text`, `funfact`, `category`) in der CSV befüllt sind.
+  - Regeneriere GeoJSON; das Skript fällt für DE-Felder auf EN zurück, falls DE leer ist.
+
+- **PowerShell: Skript gesperrt (PSSecurityException):**
+  ```powershell
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+  Unblock-File -Path ./scripts/csv_to_geojson.ps1
+  ./scripts/csv_to_geojson.ps1
+  ```
+
+- **Cache-Probleme:**
+  - Hartes Reload im Browser (Strg+F5), oder Entwicklungs-URL mit Cache-Busting nutzen.
+
+- **Grenzen/Zoom:**
+  - Falls die Karte zu weit herauszoomt, setze `minzoom`/`maxzoom` via URL.
+  - Prüfe [data/bounds.geojson](data/bounds.geojson); nutze `?edit=1`, um Grenzen zu importieren/zu exportieren.
+
+## First-Run Checklist
+
+- Quelle und Sprache testen:
+  - GeoJSON-DE: `index.html?source=geojson&lang=de`
+  - CSV-DE: `index.html?source=csv&lang=de`
+  - EN: `index.html?source=geojson&lang=en`
+- Popup-Inhalte beim Klick prüfen:
+  - Bild sichtbar (Inline-`image` oder erstes `photos`-Bild)
+  - Breadcrumb zeigt „Kategorie / Subject“ korrekt
+  - Text in gewählter Sprache, Fun Fact und Link vorhanden
+- Sprachumschalter-Verhalten:
+  - Wenn kein Popup offen, bleibt es geschlossen beim Umschalten
+  - Offenes Popup bleibt offen und aktualisiert Inhalte (DE/EN)
+- Grenzen/Zoom:
+  - Startansicht zeigt komplette Polygonfläche
+  - Drag/Zoom bleibt innerhalb der Grenze (leichte Padding erlaubt)
+- Netzwerk-Robustheit:
+  - Bei Fehlern erscheint Toast und „Tap to retry“ funktioniert
+  - Save-Data-Hinweis auf Low-End/gedrosselter Verbindung sichtbar

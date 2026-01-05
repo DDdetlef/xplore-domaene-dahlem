@@ -335,7 +335,8 @@ function formatTextToHTML(raw) {
 function buildPoiPopupContent(f) {
   const props = f && f.properties ? f.properties : {};
   function pickLang(deVal, enVal) { return currentLang === 'en' ? (enVal || deVal || '') : (deVal || enVal || ''); }
-  const subject = pickLang(props.subject || '', props.subject_en || '');
+  // Show subject if available, otherwise fall back to category label
+  const subject = pickLang(props.subject || props.category || '', props.subject_en || '');
   const title = pickLang(props.title || props.name || '', props.title_en || props.name_en || '');
   const text = pickLang(props.text || props.desc || props.description || '', props.text_en || props.desc_en || props.description_en || '');
   const funfact = pickLang(props.funfact || '', props.funfact_en || '');
@@ -587,12 +588,22 @@ function renderPOIFeatureCollection(fc) {
     } else {
       m = L.marker(latlng);
     }
-    const content = buildPoiPopupContent(f);
+    // Build popup content dynamically at click time to avoid stale or mixed-language content
     if (isMobile()) {
-      m.on('click', () => { lastClickedMarker = m; openMobilePopup(content); });
+      m.on('click', () => {
+        lastClickedMarker = m;
+        const content = buildPoiPopupContent(f);
+        openMobilePopup(content);
+      });
     } else {
-      m.on('click', () => { lastClickedMarker = m; });
-      m.bindPopup(content, popupOpts);
+      m.bindPopup('', popupOpts);
+      m.on('click', () => {
+        lastClickedMarker = m;
+        const content = buildPoiPopupContent(f);
+        const p = m.getPopup && m.getPopup();
+        if (p && p.setContent) p.setContent(content); else m.bindPopup(content, popupOpts);
+        try { m.openPopup(); } catch (_) {}
+      });
     }
     m.addTo(poiLayer);
     m.feature = f;

@@ -2,6 +2,7 @@
     "features":  [
                      {
                          "properties":  {
+                                            "subject_en":  "Ecological Landscaping",
                                             "funfact_en":  "It can take many years for the clay layer to swell fully and become watertight. The pond is replenished with rainwater from the roof of our barn, which is conveyed here through an underground pipe.",
                                             "category":  "Wildtiere \u0026 -pflanzen",
                                             "funfact":  "Bis die Tonschicht vollständig zugequollen und dicht ist, können viele Jahre vergehen. Nachgefüllt wird der Teich durch Regenwasser vom Dach unserer Scheune, das durch ein unterirdisches Rohr hier eingeleitet wird.",
@@ -41,7 +42,7 @@
                      },
                      {
                          "properties":  {
-                                            "subject_en":  "N",
+                                            "subject_en":  "Nazism",
                                             "funfact_en":  "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
                                             "category":  "Historie",
                                             "funfact":  "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",

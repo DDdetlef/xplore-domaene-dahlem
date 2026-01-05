@@ -1,6 +1,7 @@
 name: Auto-Generate GeoJSON from CSV
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'data/poi.csv'

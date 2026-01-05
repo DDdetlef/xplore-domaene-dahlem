@@ -9,6 +9,7 @@ if (!(Test-Path -Path $CsvPath)) {
 }
 
 $rows = Import-Csv -Path $CsvPath -Delimiter ';'
+Write-Host "Read $($rows.Count) CSV rows from $CsvPath"
 $function:NormalizeText = {
   param([string]$s)
   if ([string]::IsNullOrWhiteSpace($s)) { return $null }

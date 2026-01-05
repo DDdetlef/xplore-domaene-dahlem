@@ -206,38 +206,14 @@ if (typeof minZoom === 'number') map.setMinZoom(minZoom);
 if (typeof maxZoomMap === 'number') map.setMaxZoom(maxZoomMap);
 let activeBounds = null;
 let boundaryGeoJSON = null; // precise polygon for containment checks
-// Compute and apply a minZoom so the map cannot zoom out beyond the (padded) active bounds
-function updateMinZoomForBounds() {
-  try {
-    // Respect explicit ?minzoom= parameter if provided
-    if (typeof minZoom === 'number') return;
-    if (!activeBounds || !activeBounds.isValid || !activeBounds.isValid()) return;
-    // Fit to a slightly padded bounds to show a bit of neighbourhood when fully zoomed out
-    const padded = activeBounds.pad(MAX_BOUNDS_PAD);
-    // 'inside' true => the zoom that fits the given bounds fully inside the view
-    const z = map.getBoundsZoom(padded, true);
-    // Clamp to sane range and never exceed current maxZoom
-    const currentMax = (typeof maxZoomMap === 'number' ? maxZoomMap : (map.getMaxZoom ? map.getMaxZoom() : 22)) || 22;
-    const clamped = isFinite(z) ? Math.max(0, Math.min(z, currentMax)) : null;
-    if (clamped !== null) {
-      const currentZoom = map.getZoom ? map.getZoom() : null;
-      // Never raise minZoom above current zoom level determined by fitBounds
-      const targetMin = (currentZoom !== null && isFinite(currentZoom)) ? Math.min(clamped, currentZoom) : clamped;
-      map.setMinZoom(targetMin);
-      // Do not force a zoom-in here; we want the full bbox visible after fitBounds
-    }
-  } catch (_) {}
-}
 if (bbox) {
   activeBounds = bbox;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
-  setTimeout(updateMinZoomForBounds, 0);
 } else if (DEFAULT_BBOX_DOMAENE_DAHLEM) {
   activeBounds = DEFAULT_BBOX_DOMAENE_DAHLEM;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
-  setTimeout(updateMinZoomForBounds, 0);
 } else {
   map.setView([52.52, 13.405], 11);
 }
@@ -534,7 +510,7 @@ function debounce(fn, wait) {
   };
 }
 try {
-  const invalidate = debounce(function () { try { map.invalidateSize(); updateMinZoomForBounds(); } catch (_) {} }, 120);
+  const invalidate = debounce(function () { try { map.invalidateSize(); } catch (_) {} }, 120);
   window.addEventListener('orientationchange', invalidate, { passive: true });
   window.addEventListener('resize', invalidate, { passive: true });
 } catch (_) {}
@@ -867,8 +843,6 @@ function buildOrUpdateCategoryControl(categories) {
         map.setMaxBounds(b.pad(MAX_BOUNDS_PAD));
         // Add extra top padding to ensure the polygon isn't clipped by controls
         map.fitBounds(b, { paddingTopLeft: [20, 60], paddingBottomRight: [20, 20] });
-        // Recompute min zoom based on new bounds
-        try { setTimeout(updateMinZoomForBounds, 0); } catch (_) {}
         // Ensure proper sizing if assets changed layout
         setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 0);
       }

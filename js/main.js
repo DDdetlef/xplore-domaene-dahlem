@@ -662,14 +662,21 @@ function buildOrUpdateCategoryControl(categories) {
       header.style.display = 'flex';
       header.style.alignItems = 'center';
       header.style.background = 'rgba(255,255,255,0.9)';
-      const toggle = L.DomUtil.create('a', '', header);
-      toggle.href = '#';
+      const toggle = L.DomUtil.create('button', '', header);
+      toggle.setAttribute('type', 'button');
       toggle.title = t('filter');
       toggle.setAttribute('aria-label', t('filter'));
+      toggle.style.display = 'inline-block';
       toggle.style.width = '34px';
       toggle.style.height = '34px';
       toggle.style.lineHeight = '34px';
       toggle.style.textAlign = 'center';
+      toggle.style.cursor = 'pointer';
+      toggle.style.background = 'transparent';
+      toggle.style.border = 'none';
+      toggle.style.padding = '0';
+      toggle.style.margin = '0';
+      toggle.style.touchAction = 'manipulation';
       toggle.innerHTML = '<i class="fa fa-bars"></i>';
       const headerText = L.DomUtil.create('span', '', header);
       headerText.textContent = ' ' + t('filter');
@@ -688,6 +695,8 @@ function buildOrUpdateCategoryControl(categories) {
       L.DomEvent.on(langSel, 'change', function () { setLanguage(langSel.value); });
 
       const wrap = L.DomUtil.create('div', '', container);
+      const wrapId = 'filter-wrap';
+      try { wrap.id = wrapId; toggle.setAttribute('aria-controls', wrapId); } catch (_) {}
       wrap.style.padding = '6px';
       wrap.style.background = 'rgba(255,255,255,0.9)';
       wrap.style.maxWidth = '220px';
@@ -702,7 +711,6 @@ function buildOrUpdateCategoryControl(categories) {
         toggle.setAttribute('aria-expanded', 'true');
       }
       L.DomEvent.on(toggle, 'click', L.DomEvent.stopPropagation)
-                .on(toggle, 'click', L.DomEvent.preventDefault)
                 .on(toggle, 'click', function () {
                   const isHidden = wrap.style.display === 'none';
                   wrap.style.display = isHidden ? 'block' : 'none';

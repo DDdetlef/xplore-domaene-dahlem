@@ -334,6 +334,17 @@ function buildPhotos(props) {
   return `<div class=\"popup-fotos\">${items}</div>`;
 }
 
+function getPrimaryImage(props) {
+  const im = (props && props.image) || '';
+  if (im) return String(im);
+  const p = (props && (props.photos || props.images)) || [];
+  if (Array.isArray(p) && p.length > 0) {
+    const x = p[0];
+    return typeof x === 'string' ? x : String((x && x.url) || '');
+  }
+  return '';
+}
+
 // Convert plain text with line breaks into HTML paragraphs.
 // Rule: double line break (blank line) → new paragraph; single line break → <br>
 function formatTextToHTML(raw) {
@@ -370,7 +381,7 @@ function buildPoiPopupContent(f) {
   const title = pickLang(props.title || props.name || '', props.title_en || props.name_en || '');
   const text = pickLang(props.text || props.desc || props.description || '', props.text_en || props.desc_en || props.description_en || '');
   const funfact = pickLang(props.funfact || '', props.funfact_en || '');
-  const image = props.image || '';
+  const image = getPrimaryImage(props);
   const link = props.link || props.url || props.website || '';
 
   const parts = [];

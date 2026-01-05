@@ -206,14 +206,54 @@ if (typeof minZoom === 'number') map.setMinZoom(minZoom);
 if (typeof maxZoomMap === 'number') map.setMaxZoom(maxZoomMap);
 let activeBounds = null;
 let boundaryGeoJSON = null; // precise polygon for containment checks
+
+// Pad-based zoom-out limit: expand bbox by a fixed distance (meters) on each side
+const ZOOM_OUT_PAD_METERS = 1000; // neighbourhood size for zoom-out extent
+function metersToDegrees(lat, meters) {
+  try {
+    const dLat = meters / 111320; // meters per degree latitude
+    const cosLat = Math.cos((lat || 0) * Math.PI / 180);
+    const dLng = meters / (111320 * (cosLat || 1e-6));
+    return { dLat, dLng };
+  } catch (_) { return { dLat: 0, dLng: 0 }; }
+}
+function getZoomOutOuterBounds() {
+  try {
+    if (!activeBounds || !activeBounds.isValid || !activeBounds.isValid()) return null;
+    const center = activeBounds.getCenter();
+    const { dLat, dLng } = metersToDegrees(center.lat, ZOOM_OUT_PAD_METERS);
+    const sw = activeBounds.getSouthWest();
+    const ne = activeBounds.getNorthEast();
+    const swPad = L.latLng(sw.lat - dLat, sw.lng - dLng);
+    const nePad = L.latLng(ne.lat + dLat, ne.lng + dLng);
+    return L.latLngBounds(swPad, nePad);
+  } catch (_) { return null; }
+}
+function applyZoomOutMin() {
+  try {
+    // Respect explicit ?minzoom= parameter if provided
+    if (typeof minZoom === 'number') return;
+    const outer = getZoomOutOuterBounds();
+    if (!outer) return;
+    const z = map.getBoundsZoom(outer, true);
+    const currentMax = (typeof maxZoomMap === 'number' ? maxZoomMap : (map.getMaxZoom ? map.getMaxZoom() : 22)) || 22;
+    const currentZoom = map.getZoom ? map.getZoom() : null;
+    if (!isFinite(z) || currentZoom === null || !isFinite(currentZoom)) return;
+    // Set minZoom conservatively: at most the current fitted zoom and plugin maxZoom
+    const targetMin = Math.min(z, currentZoom, currentMax);
+    map.setMinZoom(targetMin);
+  } catch (_) {}
+}
 if (bbox) {
   activeBounds = bbox;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
+  setTimeout(applyZoomOutMin, 0);
 } else if (DEFAULT_BBOX_DOMAENE_DAHLEM) {
   activeBounds = DEFAULT_BBOX_DOMAENE_DAHLEM;
   map.setMaxBounds(activeBounds.pad(MAX_BOUNDS_PAD));
   map.fitBounds(activeBounds, { padding: [20, 20] });
+  setTimeout(applyZoomOutMin, 0);
 } else {
   map.setView([52.52, 13.405], 11);
 }
@@ -510,7 +550,7 @@ function debounce(fn, wait) {
   };
 }
 try {
-  const invalidate = debounce(function () { try { map.invalidateSize(); } catch (_) {} }, 120);
+  const invalidate = debounce(function () { try { map.invalidateSize(); applyZoomOutMin(); } catch (_) {} }, 120);
   window.addEventListener('orientationchange', invalidate, { passive: true });
   window.addEventListener('resize', invalidate, { passive: true });
 } catch (_) {}
@@ -843,6 +883,8 @@ function buildOrUpdateCategoryControl(categories) {
         map.setMaxBounds(b.pad(MAX_BOUNDS_PAD));
         // Add extra top padding to ensure the polygon isn't clipped by controls
         map.fitBounds(b, { paddingTopLeft: [20, 60], paddingBottomRight: [20, 20] });
+        // Apply zoom-out limit based on 1000 m pad, after layout
+        try { setTimeout(applyZoomOutMin, 0); } catch (_) {}
         // Ensure proper sizing if assets changed layout
         setTimeout(() => { try { map.invalidateSize(); } catch (_) {} }, 0);
       }

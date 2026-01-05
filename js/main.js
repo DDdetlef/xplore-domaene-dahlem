@@ -37,22 +37,30 @@ function t(key) {
 }
 function setLanguage(lang) {
   if (!LANGS.includes(lang)) return;
+  // Remember whether a popup is currently open
+  let wasMobileOpen = false;
+  let wasMarkerPopupOpen = false;
+  try { wasMobileOpen = isMobile() && isMobilePopupOpen(); } catch (_) {}
+  try { wasMarkerPopupOpen = !isMobile() && !!(lastClickedMarker && lastClickedMarker.isPopupOpen && lastClickedMarker.isPopupOpen()); } catch (_) {}
+
   currentLang = lang;
   try { localStorage.setItem('lang', lang); } catch (_) {}
   try { document.documentElement.lang = lang; } catch (_) {}
+
   const backBtn = document.getElementById('mp-back');
   if (backBtn) {
     backBtn.setAttribute('aria-label', t('back'));
     const sp = backBtn.querySelector('span');
     if (sp) sp.textContent = t('back');
   }
+
   try { if (Array.isArray(lastCategoryList) && lastCategoryList.length) buildOrUpdateCategoryControl(lastCategoryList); } catch (_) {}
-  // Refresh existing marker popups and mobile click handlers to reflect new language
-  try {
-    // Close mobile popup if open to avoid stale content
-    closeMobilePopup();
-  } catch (_) {}
+
+  // Close existing popups to avoid stale content
+  try { closeMobilePopup(); } catch (_) {}
   try { map.closePopup && map.closePopup(); } catch (_) {}
+
+  // Refresh marker popup contents and click handlers
   try {
     poiMarkers.forEach(m => {
       const f = m && m.feature;
@@ -71,15 +79,6 @@ function setLanguage(lang) {
             autoPan: true,
             keepInView: true,
             autoPanPaddingTopLeft: L.point(30, 120),
-            // Detect whether a popup is currently open before closing/rebinding
-            let wasMobileOpen = false;
-            let wasMarkerPopupOpen = false;
-            try {
-              wasMobileOpen = isMobile() && isMobilePopupOpen();
-            } catch (_) { /* noop */ }
-            try {
-              wasMarkerPopupOpen = !isMobile() && !!(lastClickedMarker && lastClickedMarker.isPopupOpen && lastClickedMarker.isPopupOpen());
-            } catch (_) { /* noop */ }
             autoPanPaddingBottomRight: L.point(30, 50)
           };
           try { m.bindPopup(content, popupOpts); } catch (_) {}
@@ -87,14 +86,14 @@ function setLanguage(lang) {
       }
     });
   } catch (_) {}
-  // Reopen last clicked marker popup with updated content
+
+  // Reopen last clicked marker popup only if a popup was previously open
   try {
-    if (lastClickedMarker && lastClickedMarker.feature) {
+    if (lastClickedMarker && lastClickedMarker.feature && (wasMobileOpen || wasMarkerPopupOpen)) {
       const content = buildPoiPopupContent(lastClickedMarker.feature);
       if (isMobile()) {
         openMobilePopup(content);
       } else if (lastClickedMarker.openPopup) {
-        // Ensure content is up to date before reopening
         if (lastClickedMarker.getPopup && lastClickedMarker.getPopup()) {
           lastClickedMarker.getPopup().setContent(content);
         }
@@ -120,8 +119,7 @@ function addBaseLayerFromProvider() {
   const providerName = getQueryParam('provider');
   const maxZoomParam = getQueryParam('maxzoom');
   const apiKey = getQueryParam('apikey');
-              if (lastClickedMarker && lastClickedMarker.feature && (wasMobileOpen || wasMarkerPopupOpen)) {
-
+  
   if (providerName && L && L.tileLayer && typeof L.tileLayer.provider === 'function') {
     try {
       const opts = apiKey ? { maxZoom, apikey: apiKey, apiKey: apiKey, key: apiKey } : { maxZoom };

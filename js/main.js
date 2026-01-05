@@ -25,6 +25,20 @@ const map = L.map('map', {
 
 // Default BBox for Domäne Dahlem (from OSM Nominatim)
 // Format: L.latLngBounds([minLat, minLon], [maxLat, maxLon])
+  function categoryToIcon(cat) {
+    const s = String(cat || '').toLowerCase();
+    if (s === 'historie') return 'university';
+    if (s === 'landwirtschaft') return 'leaf';
+    if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return 'paw';
+    return 'map-marker';
+  }
+  function categoryToColor(cat) {
+    const s = String(cat || '').toLowerCase();
+    if (s === 'historie') return '#1f6feb'; // blue
+    if (s === 'landwirtschaft') return '#8B4513'; // brown
+    if (s.includes('wildtier') || s.includes('wildtiere') || s.includes('pflanze') || s.includes('pflanzen')) return '#006400'; // darkgreen
+    return '#5f9ea0'; // cadetblue
+  }
 const DEFAULT_BBOX_DOMAENE_DAHLEM = L.latLngBounds(
   [52.4581727, 13.2877241],
   [52.4601029, 13.2898741]
@@ -34,7 +48,16 @@ function getQueryParam(name) {
   const params = new URLSearchParams(window.location.search);
   const v = params.get(name);
   return v ? v.trim() : '';
-}
+  if (breadcrumb) {
+    const icon = categoryToIcon(props.category);
+    const color = categoryToColor(props.category);
+    parts.push(
+      `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">` +
+      `<strong>${esc(breadcrumb)}</strong>` +
+      (icon ? `<i class="fa fa-${esc(icon)}" style="color:${esc(color)};font-size:18px;margin-left:8px"></i>` : '') +
+      `</div>`
+    );
+  }
 
 // Simple i18n (DE/EN)
 const LANGS = ['de', 'en'];

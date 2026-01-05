@@ -1,14 +1,17 @@
 # Xplore Domäne Dahlem
 
-Eine schlanke Leaflet-App mit mobilen und redaktionellen Helfern für POIs der Domäne Dahlem.
+Eine schlanke, multilinguale Leaflet-App mit redaktionellen Helfern für POIs der Domäne Dahlem.
+Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 
 ## Features
-- Mobile Vollbild-Popup mit Zurück-Pfeil (Smartphones).
-- Kategorien-Filter als Burger-Menü (mobil einklappbar).
+- Marker nach Kategorie mit Symbolen (Historie, Landwirtschaft, Wildtiere/Pflanzen).
+- Kategorien-Filter als Burger-Menü (mobil einklappbar)
+- Leaflet Popups mit strukturierten Daten (Thema, Titel, Text, Fun Fact, Foto, Link)
+- Mobile Vollbild-Popups mit Zurück-Pfeil (Smartphones).
 - POIs aus CSV oder GeoJSON; CSV-Validator mit Bounds-Prüfung.
 - Präzise Begrenzung per `data/bounds.geojson` (Point-in-Polygon).
 - Robuste Koordinaten-Verarbeitung (Dezimal-Komma, Auto-Swap lat/lon).
-- Marker nach Kategorie mit Symbolen (Historie, Landwirtschaft, Wildtiere/Pflanzen).
+- Multilingual (DE/EN)
 - Optionaler Tile-Provider per URL (`?provider=...&apikey=...`), Fallback OSM.
 
 ## Schnellstart

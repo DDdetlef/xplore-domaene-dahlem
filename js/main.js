@@ -71,6 +71,15 @@ function setLanguage(lang) {
             autoPan: true,
             keepInView: true,
             autoPanPaddingTopLeft: L.point(30, 120),
+            // Detect whether a popup is currently open before closing/rebinding
+            let wasMobileOpen = false;
+            let wasMarkerPopupOpen = false;
+            try {
+              wasMobileOpen = isMobile() && isMobilePopupOpen();
+            } catch (_) { /* noop */ }
+            try {
+              wasMarkerPopupOpen = !isMobile() && !!(lastClickedMarker && lastClickedMarker.isPopupOpen && lastClickedMarker.isPopupOpen());
+            } catch (_) { /* noop */ }
             autoPanPaddingBottomRight: L.point(30, 50)
           };
           try { m.bindPopup(content, popupOpts); } catch (_) {}
@@ -111,7 +120,7 @@ function addBaseLayerFromProvider() {
   const providerName = getQueryParam('provider');
   const maxZoomParam = getQueryParam('maxzoom');
   const apiKey = getQueryParam('apikey');
-  const maxZoom = maxZoomParam ? Math.max(0, Math.min(22, parseInt(maxZoomParam, 10) || 19)) : 19;
+              if (lastClickedMarker && lastClickedMarker.feature && (wasMobileOpen || wasMarkerPopupOpen)) {
 
   if (providerName && L && L.tileLayer && typeof L.tileLayer.provider === 'function') {
     try {
@@ -285,6 +294,9 @@ const mobilePopupBodyEl = document.getElementById('mp-body');
 const mobilePopupBackEl = document.getElementById('mp-back');
 function isMobile() {
   try { return window.matchMedia && window.matchMedia('(max-width: 480px)').matches; } catch (_) { return (window.innerWidth || 800) <= 480; }
+}
+function isMobilePopupOpen() {
+  try { return !!(mobilePopupEl && mobilePopupEl.getAttribute('aria-hidden') === 'false' && mobilePopupEl.style.display !== 'none'); } catch (_) { return false; }
 }
 function openMobilePopup(html) {
   if (!mobilePopupEl || !mobilePopupBodyEl) return;

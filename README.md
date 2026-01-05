@@ -45,6 +45,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
  - Verbindungssensitiv: Hinweis bei Datensparmodus/niedriger Verbindung.
  - Ressourcenschonend auf Low-End-Geräten (Canvas, reduzierte Animationen, geringerer Max-Zoom).
  - Stabileres Laden: Netzwerk-Timeouts, Retries und "Tap to retry"-Hinweis.
+ - Marker-Clustering (reduziert visuelles Durcheinander und verbessert Performance bei vielen Punkten).
 
 ## Schnellstart
 - Live-Demo: https://dddetlef.github.io/xplore-domaene-dahlem/
@@ -135,6 +136,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - Farben: Historie = blau, Landwirtschaft = orange, Wildtiere/Pflanzen = dunkelgrün.
 - Symbole: Universität (Historie), Blatt (Landwirtschaft), Pfote (Wildtiere/Pflanzen).
 - Filter: Burger-Menü oben rechts; Vorauswahl per `?category=Historie,Landwirtschaft`.
+ - Clustering: Bei niedrigen Zoomstufen werden nahe Marker zu einem Cluster zusammengefasst. Beim Hineinzoomen teilen sich Cluster in einzelne Marker auf. Klick auf ein Cluster zoomt typischerweise in dessen Bereich; bei eng überlagerten Punkten werden diese „gespiderfied“ (radial aufgefächert), sodass jeder Punkt separat anklickbar ist.
 
 ## Grenzen (`bounds.geojson`)
 - Beim Laden von `data/bounds.geojson` wird die Karte auf die Geometrie gezoomt.
@@ -153,6 +155,7 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - `bbox=minLon,minLat,maxLon,maxLat`
 - `metrics=1` zeigt eine einfache Tile-Metrik-HUD.
 - `lang=en` schaltet die UI auf Englisch (DE/EN Umschalter oben rechts).
+ - `cluster=0` deaktiviert Marker-Clustering (Standard: aktiv); `cluster=1` erzwingt Aktivierung.
 
 ## Performance & Robustheit (Mobil)
 - Save-Data/Low-End-Erkennung: Nutzt `navigator.connection` (falls vorhanden), zeigt Hinweis und passt Verhalten an.
@@ -226,6 +229,9 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - Leaflet-Providers (Tile-Provider Katalog)
   - JS via CDN: unpkg.com
   - https://github.com/leaflet-extras/leaflet-providers
+- Leaflet.MarkerCluster (Marker-Clustering)
+  - CSS/JS via CDN: unpkg.com
+  - https://github.com/Leaflet/Leaflet.markercluster
 - Font Awesome 4.7 (Icons)
   - CSS via CDN: cdnjs.com
   - https://fontawesome.com/v4.7/

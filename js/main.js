@@ -330,8 +330,18 @@ function showToast(msg) {
   } catch (_) {}
 }
 
-// Layer group for POIs (markers) to allow import/export
-const poiLayer = L.featureGroup().addTo(map);
+// Layer group for POIs (markers): optional MarkerCluster for performance and UX
+const CLUSTER_ENABLED = (function(){
+  const raw = getQueryParam('cluster');
+  if (!raw) return true; // default: enabled
+  return String(raw).trim() !== '0';
+})();
+const poiLayer = (CLUSTER_ENABLED && L.markerClusterGroup ? L.markerClusterGroup({
+  spiderfyOnMaxZoom: true,
+  disableClusteringAtZoom: 18,
+  maxClusterRadius: 40,
+  showCoverageOnHover: false
+}) : L.featureGroup()).addTo(map);
 const poiMarkers = [];
 let lastClickedMarker = null;
 let selectedCategories = new Set();

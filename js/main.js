@@ -337,6 +337,41 @@ let lastClickedMarker = null;
 let selectedCategories = new Set();
 // Track which data source is currently loaded: 'csv' or 'geojson'
 let DATA_SOURCE = 'unknown';
+
+// Optional: filter markers to the current view bbox with a neighbourhood pad
+// Enable via ?bboxfilter=1 and set pad via ?neighborhood=<meters> or ?neighbourhood=<meters>
+const VIEW_FILTER_ENABLED = getQueryParam('bboxfilter') === '1';
+function getNeighborhoodMeters() {
+  const a = parseFloat(getQueryParam('neighborhood'));
+  const b = parseFloat(getQueryParam('neighbourhood'));
+  const val = isFinite(a) ? a : (isFinite(b) ? b : NaN);
+  // Default pad if not specified: 250 meters
+  return isFinite(val) && val >= 0 ? val : 250;
+}
+function metersToDegrees(lat, meters) {
+  // Approximation: 1 deg latitude ≈ 111_320 m; longitude scaled by cos(latitude)
+  const dLat = meters / 111320;
+  const cosLat = Math.cos((lat || 0) * Math.PI / 180);
+  const dLng = meters / (111320 * (cosLat || 1e-6));
+  return { dLat, dLng };
+}
+function getPaddedViewBounds() {
+  try {
+    const b = map.getBounds();
+    if (!b || !b.isValid || !b.isValid()) return null;
+    const center = b.getCenter();
+    const padMeters = getNeighborhoodMeters();
+    const { dLat, dLng } = metersToDegrees(center.lat, padMeters);
+    const sw = b.getSouthWest();
+    const ne = b.getNorthEast();
+    const swPad = L.latLng(sw.lat - dLat, sw.lng - dLng);
+    const nePad = L.latLng(ne.lat + dLat, ne.lng + dLng);
+    return L.latLngBounds(swPad, nePad);
+  } catch (_) {
+    return null;
+  }
+}
+
 function parseInitialCategories() {
   const raw = getQueryParam('category');
   if (!raw) return;
@@ -570,6 +605,8 @@ function renderPOIFeatureCollection(fc) {
   const cats = Array.from(catSet).sort();
   lastCategoryList = cats;
   buildOrUpdateCategoryControl(cats);
+  // Enforce initial view-based filter (if enabled) after adding markers
+  try { applyCategoryFilterFromSet(); } catch (_) {}
 }
 
 // Load/Reload POIs: prefer CSV (param or data/poi.csv), fallback to data/poi.geojson
@@ -616,11 +653,16 @@ function applyCategoryFilterFromSet() {
     const s = String(v).toLowerCase();
     return s === 'alle' || s === 'all';
   });
+  const padBounds = VIEW_FILTER_ENABLED ? getPaddedViewBounds() : null;
   poiMarkers.forEach(m => {
     const props = (m.feature && m.feature.properties) || {};
     const mc = String(props.category || '').trim().toLowerCase();
     const match = Array.from(selectedCategories).some(v => mc === String(v).toLowerCase());
-    const show = wantAll || match;
+    let show = wantAll || match;
+    if (show && VIEW_FILTER_ENABLED && padBounds && m.getLatLng) {
+      const ll = m.getLatLng();
+      show = padBounds.contains(ll);
+    }
     if (show) poiLayer.addLayer(m); else poiLayer.removeLayer(m);
   });
 }
@@ -960,3 +1002,11 @@ function buildOrUpdateCategoryControl(categories) {
     }
   });
 })();
+
+    // Keep markers filtered to the current view (plus neighbourhood pad) on interactions
+    try {
+      if (VIEW_FILTER_ENABLED) {
+        map.on('moveend', applyCategoryFilterFromSet);
+        map.on('zoomend', applyCategoryFilterFromSet);
+      }
+    } catch (_) {}

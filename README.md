@@ -69,6 +69,8 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 ### CSV → GeoJSON Konvertierung (Pre-Deploy)
 - Zweck: CSV-POIs in eine GeoJSON-FeatureCollection umwandeln für Hosting/Versionierung.
 - Skript: siehe `scripts/csv_to_geojson.ps1`.
+  - Fallback (lokal, Windows PowerShell): `scripts/archive/csv_to_geojson_legacy.ps1` (ohne Text-Normalisierung/CI-Logging).
+  - Branch-Hinweis: In Branch `local` ist die CI deaktiviert; Konvertierung erfolgt lokal vor dem Commit.
 
 #### DE-Vollständigkeit und Bilder
 - Das Skript mappt Inhalte DE-first: `title`, `text`, `subject`, `category` werden bevorzugt aus DE-Spalten übernommen und fallen auf EN zurück, wenn DE leer ist. Zusätzlich werden `*_en`-Felder gesetzt, sofern vorhanden.
@@ -86,6 +88,8 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 ```powershell
 # Windows PowerShell
 ./scripts/csv_to_geojson.ps1
+# oder Fallback (archivierte Variante)
+./scripts/archive/csv_to_geojson_legacy.ps1
 
 # Alternativ (PowerShell Core)
 pwsh -File ./scripts/csv_to_geojson.ps1

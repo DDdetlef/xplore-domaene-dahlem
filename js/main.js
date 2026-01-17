@@ -491,6 +491,10 @@ function buildPoiPopupContent(f) {
   const funfact = pickLang(props.funfact || '', props.funfact_en || '');
   const image = getPrimaryImage(props);
   const link = sanitizeUrl(props.link || props.url || props.website || '');
+  // Optional example fields commonly present in CSV/GeoJSON
+  const address = pickLang(props.address || props.addr || '', props.address_en || '');
+  const hours = props.hours || props.opening_hours || '';
+  const hoursLabel = currentLang === 'en' ? 'Opening hours' : 'Öffnungszeiten';
 
   const parts = [];
   const breadcrumb = categoryLabel && subject ? `${categoryLabel} / ${subject}` : (categoryLabel || subject);
@@ -510,6 +514,8 @@ function buildPoiPopupContent(f) {
   if (image) parts.push(`<div style=\"margin-top:6px\"><img src=\"${esc(image)}\" alt=\"${esc(title || subject || 'Bild')}\" style=\"max-width:100%;height:auto;border-radius:4px\" loading=\"lazy\" decoding=\"async\" /></div>`);
   const photos = buildPhotos(props); // still supports optional photos[]
   if (photos) parts.push(photos);
+  if (address) parts.push(`<div class="poi-address" style="margin-top:6px">${esc(address)}</div>`);
+  if (hours) parts.push(`<div class="poi-hours" style="margin-top:6px"><strong>${esc(hoursLabel)}:</strong> ${esc(hours)}</div>`);
   if (link) parts.push(`<div style=\"margin-top:6px;margin-bottom:10px\"><a href=\"${esc(link)}\" target=\"_blank\" rel=\"noopener noreferrer\">${esc(t('more_info'))}</a></div>`);
   const html = parts.join('');
   return `<div>${html}</div>`;

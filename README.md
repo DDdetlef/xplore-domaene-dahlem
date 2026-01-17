@@ -67,6 +67,15 @@ Hauptsächlich entwickelt für die Nutzung mit Smartphone ("mobile first").
 - DevTools → Network → Throttling („Slow 3G“), um Save-Data/Niedrig-Verbindung zu simulieren.
 
 ## Daten (POIs)
+ 
+## Inhalte ergänzen
+- **Ziel:** POIs, Popup-Inhalte oder statische UI ergänzen/ändern.
+- **POIs hinzufügen:** Neue Einträge in [data/poi.csv](data/poi.csv) oder direkt in [data/poi.geojson](data/poi.geojson) anlegen; gleiche Feldnamen wie vorhandene Dateien verwenden. Die GitHub Action aktualisiert `poi.geojson` automatisch beim Push.
+- **Popup-Inhalt anpassen:** In `js/main.js` die Funktion `buildPoiPopupContent` anpassen — dort wird das HTML für Popups erzeugt.
+- **Statische UI ergänzen:** In [index.html](index.html) ein Element (z. B. <div id="sidebar">) ergänzen und dessen Inhalt per JavaScript setzen (`document.getElementById('sidebar').innerHTML = '…'`).
+- **Mehrsprachigkeit:** Vorhandene i18n-Funktion `t('key')` in `js/main.js` verwenden.
+- **Testen:** Seite im Browser öffnen, Cache leeren (Strg+F5) und die Konsole auf Fehler prüfen.
+- **Hinweise:** HTML-Inhalte stets sanitizen; bei vielen Punkten GeoJSON bevorzugen; Marker-Clustering per URL-Parameter `cluster` steuern.
 
 ### CSV → GeoJSON (CI)
 - Zweck: CSV-POIs in eine GeoJSON-FeatureCollection umwandeln für Hosting/Versionierung.

@@ -14,126 +14,153 @@ $function:NormalizeText = {
   param([string]$s)
   if ([string]::IsNullOrWhiteSpace($s)) { return $null }
   # Normalize Windows newlines and convert literal \n sequences back to real newlines
-  param(
-    [string]$CsvPath = "data/poi.csv",
-    [string]$OutPath = "data/poi.geojson"
-  )
+  $x = $s -replace "\r\n", "`n"
+  $x = $x -replace "\\n", "`n"
+  $x = $x.Trim()
+  return $x
+}
 
-  if (!(Test-Path -Path $CsvPath)) {
-    Write-Error "CSV not found: $CsvPath"
-    exit 1
-  }
-
-  $rows = Import-Csv -Path $CsvPath -Delimiter ';'
-  Write-Host "Read $($rows.Count) CSV rows from $CsvPath"
-  $function:NormalizeText = {
-    param([string]$s)
-    if ([string]::IsNullOrWhiteSpace($s)) { return $null }
-    # Normalize Windows newlines and convert literal \n sequences back to real newlines
-    $x = $s -replace "\r\n", "`n"
-    $x = $x -replace "\\n", "`n"
-    $x = $x.Trim()
-    return $x
-  }
-
-  function GetVal {
-    param($row, [string[]]$keys)
-    foreach ($k in $keys) {
-      if ($row.PSObject.Properties[$k]) {
-        $v = $row.$k
-        if ($null -ne $v -and "$v" -ne "") { return "$v" }
-      }
+function GetVal {
+  param($row, [string[]]$keys)
+  foreach ($k in $keys) {
+    if ($row.PSObject.Properties[$k]) {
+      $v = $row.$k
+      if ($null -ne $v -and "$v" -ne "") { return "$v" }
     }
-    return $null
   }
+  return $null
+}
 
-  function SplitList {
-    param([string]$s)
-    if ([string]::IsNullOrWhiteSpace($s)) { return @() }
-    return ($s -split '[;,]') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+function SplitList {
+  param([string]$s)
+  if ([string]::IsNullOrWhiteSpace($s)) { return @() }
+  return ($s -split '[;,]') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+}
+
+# Try to parse a coordinate string into a double with several heuristics
+function TryParseNumber {
+  param([string]$s, [ref]$result)
+  if ($null -eq $s) { return $false }
+  $x = "$s".Trim()
+  if ($x.StartsWith("'")) { $x = $x.Substring(1) }
+  $x = $x -replace '\s',''
+  # First, try invariant culture parse (dot as decimal)
+  try {
+    $result.Value = [double]::Parse($x, [System.Globalization.CultureInfo]::InvariantCulture)
+    return $true
+  } catch {}
+
+  # Heuristic: if both '.' and ',' present, assume '.' thousands and ',' decimal
+  $y = $x
+  if ($y -match '\.' -and $y -match ',') {
+    $y = $y -replace '\.',''
+    $y = $y -replace ',','.'
+  } else {
+    # If only comma present, treat it as decimal separator
+    if ($y -match ',') { $y = $y -replace ',','.' }
+    # Remove any remaining non-numeric chars except dot, signs and exponent markers
+    $y = $y -replace '[^0-9\.\-+eE]',''
   }
+  try {
+    $result.Value = [double]::Parse($y, [System.Globalization.CultureInfo]::InvariantCulture)
+    return $true
+  } catch {}
 
-  $features = @()
+  # Final fallback: strip a trailing ',00' or similar and try again
+  $z = $x -replace ',00$',''
+  $z = $z -replace '[^0-9\.\-+eE]',''
+  try {
+    $result.Value = [double]::Parse($z, [System.Globalization.CultureInfo]::InvariantCulture)
+    return $true
+  } catch {}
 
-  foreach ($row in $rows) {
-    $latS = GetVal $row @('lat','latitude','y')
-    $lonS = GetVal $row @('lon','long','lng','x','longitude')
-    # Handle mislabeled columns where 'longitude' actually contains latitude and 'latitude' contains longitude
-    if ((-not $latS -or -not $lonS) -and $row.PSObject.Properties['longitude'] -and $row.PSObject.Properties['latitude']) {
-      $latS = $row.longitude
-      $lonS = $row.latitude
-    }
-    if (-not $latS -or -not $lonS) { continue }
-    try { $lat = [double]::Parse($latS, [System.Globalization.CultureInfo]::InvariantCulture) } catch { continue }
-    try { $lon = [double]::Parse($lonS, [System.Globalization.CultureInfo]::InvariantCulture) } catch { continue }
-    # Heuristic swap for Berlin-area data if columns are mislabeled
-    if ($lat -lt 30 -and $lon -gt 30) { $tmp = $lat; $lat = $lon; $lon = $tmp }
+  return $false
+}
 
-    $props = @{}
-    $title = GetVal $row @('title','name')
-    $title_en = GetVal $row @('title_en','name_en')
-    # Prefer explicit DE/EN text fields; fall back between languages to ensure DE completeness
-    $text = GetVal $row @('text','desc','description')
-    $text_en = GetVal $row @('text_en','desc_en','description_en')
-    $text = & $function:NormalizeText $text
-    $text_en = & $function:NormalizeText $text_en
-    # Subject in DE/EN
-    $subject = GetVal $row @('subject')
-    $subject_en = GetVal $row @('subject_en')
-    # Category (DE/EN)
-    $category = GetVal $row @('category')
-    $category_en = GetVal $row @('category_en')
+$features = @()
 
-    # Assign properties with DE-first, fallback to EN if DE missing
-    if ($title -and "$title" -ne '') { $props.title = "$title" }
-    elseif ($title_en -and "$title_en" -ne '') { $props.title = "$title_en" }
-    if ($title_en -and "$title_en" -ne '') { $props.title_en = "$title_en" }
-
-    if ($text -and "$text" -ne '') { $props.text = "$text" }
-    elseif ($text_en -and "$text_en" -ne '') { $props.text = "$text_en" }
-    if ($text_en -and "$text_en" -ne '') { $props.text_en = "$text_en" }
-
-    if ($subject -and "$subject" -ne '') { $props.subject = "$subject" }
-    elseif ($subject_en -and "$subject_en" -ne '') { $props.subject = "$subject_en" }
-    if ($subject_en -and "$subject_en" -ne '') { $props.subject_en = "$subject_en" }
-
-    if ($category -and "$category" -ne '') { $props.category = "$category" }
-    elseif ($category_en -and "$category_en" -ne '') { $props.category = "$category_en" }
-    if ($category_en -and "$category_en" -ne '') { $props.category_en = "$category_en" }
-    $address = GetVal $row @('address')
-    if ($address) { $props.address = $address }
-    $hours = GetVal $row @('hours','opening_hours')
-    if ($hours) { $props.hours = $hours }
-    $website = GetVal $row @('website','link','url')
-    if ($website) { $props.website = $website }
-    $tagsS = GetVal $row @('tags')
-    if ($tagsS) { $props.tags = SplitList $tagsS }
-    $photosS = GetVal $row @('photos','images','image')
-    if ($photosS) {
-      $urls = @(SplitList $photosS)
-      $props.photos = @()
-      foreach ($u in $urls) { $props.photos += @{ url = $u } }
-      # also expose first image as 'image' (handle single-string case)
-      if ($urls -and ($urls | Measure-Object).Count -gt 0) {
-        $firstUrl = ($urls | Select-Object -First 1)
-        $props.image = "$firstUrl"
-      }
-    }
-    $funfact = GetVal $row @('funfact')
-    $funfact_en = GetVal $row @('funfact_en')
-    $funfact = & $function:NormalizeText $funfact
-    $funfact_en = & $function:NormalizeText $funfact_en
-    if ($funfact -and "$funfact" -ne '') { $props.funfact = "$funfact" }
-    elseif ($funfact_en -and "$funfact_en" -ne '') { $props.funfact = "$funfact_en" }
-    if ($funfact_en -and "$funfact_en" -ne '') { $props.funfact_en = "$funfact_en" }
-
-    $feature = @{ type = 'Feature'; properties = $props; geometry = @{ type = 'Point'; coordinates = @($lon, $lat) } }
-    $features += $feature
+foreach ($row in $rows) {
+  $latS = GetVal $row @('lat','latitude','y')
+  $lonS = GetVal $row @('lon','long','lng','x','longitude')
+  # Handle mislabeled columns where 'longitude' actually contains latitude and 'latitude' contains longitude
+  if ((-not $latS -or -not $lonS) -and $row.PSObject.Properties['longitude'] -and $row.PSObject.Properties['latitude']) {
+    $latS = $row.longitude
+    $lonS = $row.latitude
   }
+  if (-not $latS -or -not $lonS) { continue }
+  $latRef = 0.0
+  $lonRef = 0.0
+  if (-not (TryParseNumber $latS ([ref]$latRef))) { continue }
+  if (-not (TryParseNumber $lonS ([ref]$lonRef))) { continue }
+  $lat = $latRef.Value
+  $lon = $lonRef.Value
+  # Heuristic swap for Berlin-area data if columns are mislabeled
+  if ($lat -lt 30 -and $lon -gt 30) { $tmp = $lat; $lat = $lon; $lon = $tmp }
 
-  $fc = @{ type = 'FeatureCollection'; features = $features }
+  $props = @{}
+  $title = GetVal $row @('title','name')
+  $title_en = GetVal $row @('title_en','name_en')
+  # Prefer explicit DE/EN text fields; fall back between languages to ensure DE completeness
+  $text = GetVal $row @('text','desc','description')
+  $text_en = GetVal $row @('text_en','desc_en','description_en')
+  $text = & $function:NormalizeText $text
+  $text_en = & $function:NormalizeText $text_en
+  # Subject in DE/EN
+  $subject = GetVal $row @('subject')
+  $subject_en = GetVal $row @('subject_en')
+  # Category (DE/EN)
+  $category = GetVal $row @('category')
+  $category_en = GetVal $row @('category_en')
 
-  $Json = $fc | ConvertTo-Json -Depth 8
-  Set-Content -Path $OutPath -Value $Json -Encoding UTF8
-  Write-Host "Wrote $OutPath with $($features.Count) features."
+  # Assign properties with DE-first, fallback to EN if DE missing
+  if ($title -and "$title" -ne '') { $props.title = "$title" }
+  elseif ($title_en -and "$title_en" -ne '') { $props.title = "$title_en" }
+  if ($title_en -and "$title_en" -ne '') { $props.title_en = "$title_en" }
+
+  if ($text -and "$text" -ne '') { $props.text = "$text" }
+  elseif ($text_en -and "$text_en" -ne '') { $props.text = "$text_en" }
+  if ($text_en -and "$text_en" -ne '') { $props.text_en = "$text_en" }
+
+  if ($subject -and "$subject" -ne '') { $props.subject = "$subject" }
+  elseif ($subject_en -and "$subject_en" -ne '') { $props.subject = "$subject_en" }
+  if ($subject_en -and "$subject_en" -ne '') { $props.subject_en = "$subject_en" }
+
+  if ($category -and "$category" -ne '') { $props.category = "$category" }
+  elseif ($category_en -and "$category_en" -ne '') { $props.category = "$category_en" }
+  if ($category_en -and "$category_en" -ne '') { $props.category_en = "$category_en" }
+  $address = GetVal $row @('address')
+  if ($address) { $props.address = $address }
+  $hours = GetVal $row @('hours','opening_hours')
+  if ($hours) { $props.hours = $hours }
+  $website = GetVal $row @('website','link','url')
+  if ($website) { $props.website = $website }
+  $tagsS = GetVal $row @('tags')
+  if ($tagsS) { $props.tags = SplitList $tagsS }
   $photosS = GetVal $row @('photos','images','image')
+  if ($photosS) {
+    $urls = @(SplitList $photosS)
+    $props.photos = @()
+    foreach ($u in $urls) { $props.photos += @{ url = $u } }
+    # also expose first image as 'image' (handle single-string case)
+    if ($urls -and ($urls | Measure-Object).Count -gt 0) {
+      $firstUrl = ($urls | Select-Object -First 1)
+      $props.image = "$firstUrl"
+    }
+  }
+  $funfact = GetVal $row @('funfact')
+  $funfact_en = GetVal $row @('funfact_en')
+  $funfact = & $function:NormalizeText $funfact
+  $funfact_en = & $function:NormalizeText $funfact_en
+  if ($funfact -and "$funfact" -ne '') { $props.funfact = "$funfact" }
+  elseif ($funfact_en -and "$funfact_en" -ne '') { $props.funfact = "$funfact_en" }
+  if ($funfact_en -and "$funfact_en" -ne '') { $props.funfact_en = "$funfact_en" }
+
+  $feature = @{ type = 'Feature'; properties = $props; geometry = @{ type = 'Point'; coordinates = @($lon, $lat) } }
+  $features += $feature
+}
+
+$fc = @{ type = 'FeatureCollection'; features = $features }
+
+$Json = $fc | ConvertTo-Json -Depth 8
+Set-Content -Path $OutPath -Value $Json -Encoding UTF8
+Write-Host "Wrote $OutPath with $($features.Count) features."

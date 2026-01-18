@@ -65,21 +65,37 @@ def main():
         print('No rows in CSV')
         return
 
-    header = [h.strip() for h in rows[0]]
-    # normalize header names
+    # strip whitespace and any UTF-8 BOM from header cells
+    header = [h.strip().lstrip('\ufeff') for h in rows[0]]
+    # If header is like 'Column1', try to use the next row as real header or fall back to canonical names
     header_lc = [h.lower() for h in header]
+    if any(h.startswith('column') for h in header_lc):
+        if len(rows) > 1:
+            candidate = [c.strip() for c in rows[1]]
+            cand_lc = [c.lower() for c in candidate]
+            if 'latitude' in cand_lc and 'longitude' in cand_lc:
+                header = candidate
+                header_lc = cand_lc
+                data_start = 2
+            else:
+                # fallback canonical header by position
+                header = ['ID', 'latitude', 'longitude', 'category', 'category_en', 'subject', 'subject_en', 'title', 'title_en', 'text', 'text_en', 'funfact', 'funfact_en', 'image', 'link']
+                header_lc = [h.lower() for h in header]
+                data_start = 1
+        else:
+            header = ['ID', 'latitude', 'longitude', 'category', 'category_en', 'subject', 'subject_en', 'title', 'title_en', 'text', 'text_en', 'funfact', 'funfact_en', 'image', 'link']
+            header_lc = [h.lower() for h in header]
+            data_start = 1
+    else:
+        data_start = 1
 
-    # If header doesn't contain latitude/longitude, try fallback to Column2/Column3 or assume positions
+    # find latitude/longitude columns
     try:
         lat_idx = header_lc.index('latitude')
         lon_idx = header_lc.index('longitude')
-        data_start = 1
     except ValueError:
-        # fallback: if first row looks like actual header inside row 1 (Excel oddities), try to detect
-        # We'll assume columns: ID, latitude, longitude at indices 0,1,2 otherwise
         lat_idx = 1
         lon_idx = 2
-        data_start = 1
 
     features = []
     for cols in rows[data_start:]:

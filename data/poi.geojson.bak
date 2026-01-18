@@ -150,9 +150,134 @@
           52.462091399086816
         ]
       }
-    }
-  ]
-}
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ID": null,
+        "category": null,
+        "category_en": null,
+        "subject": null,
+        "subject_en": null,
+        "title": null,
+        "title_en": null,
+        "text": null,
+        "text_en": null,
+        "funfact": null,
+        "funfact_en": null,
+        "image": null,
+        "link": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ID": null,
+        "category": null,
+        "category_en": null,
+        "subject": null,
+        "subject_en": null,
+        "title": null,
+        "title_en": null,
+        "text": null,
+        "text_en": null,
+        "funfact": null,
+        "funfact_en": null,
+        "image": null,
+        "link": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ID": null,
+        "category": null,
+        "category_en": null,
+        "subject": null,
+        "subject_en": null,
+        "title": null,
+        "title_en": null,
+        "text": null,
+        "text_en": null,
+        "funfact": null,
+        "funfact_en": null,
+        "image": null,
+        "link": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ID": null,
+        "category": null,
+        "category_en": null,
+        "subject": null,
+        "subject_en": null,
+        "title": null,
+        "title_en": null,
+        "text": null,
+        "text_en": null,
+        "funfact": null,
+        "funfact_en": null,
+        "image": null,
+        "link": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ID": null,
+        "category": null,
+        "category_en": null,
+        "subject": null,
+        "subject_en": null,
+        "title": null,
+        "title_en": null,
+        "text": null,
+        "text_en": null,
+        "funfact": null,
+        "funfact_en": null,
+        "image": null,
+        "link": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "type": "Feature",
       "properties": {
         "ID": null,
         "category": null,

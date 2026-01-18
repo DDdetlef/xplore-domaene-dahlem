@@ -1,179 +1,150 @@
 {
+  "type": "FeatureCollection",
   "features": [
     {
-      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.288840160645377,
+          52.462091399086816
+        ]
+      },
       "properties": {
-        "category_en": "Wildlife",
+        "title": "Naturnaher Teich (66 W.)",
+        "text": "Ursprünglich befand sich an dieser Stelle eine vermutlich durch Abgrabung entstandene Senke. Durch Ausbaggern des lehmigen Untergrunds und Abdichten mit einer dicken Tonschicht konnte ein naturnaher Teich geschaffen werden, wie er in ähnlicher Form im Berliner Raum als eiszeitlich entstandener Pfuhl häuﬁg zu ﬁnden ist. Libellen, Bienen und andere Insekten haben hier ihre Tränke und insektenfressende Tiere wie Fledermäuse, Lurche und Vögel ﬁnden so ihre Nahrung.",
         "photos": [
           {
             "url": "https://www.domaene-dahlem.de/wp-content/uploads/2025/06/DSC4634-scaled-e1750942073148-1166x583-c-default.jpg"
           }
         ],
-        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2025/06/DSC4634-scaled-e1750942073148-1166x583-c-default.jpg",
-        "funfact_en": "It can take many years for the clay layer to swell fully and become watertight. The pond is replenished with rainwater from the roof of our barn, which is conveyed here through an underground pipe.",
-        "category": "Wildtiere & -pflanzen",
         "funfact": "Bis die Tonschicht vollständig zugequollen und dicht ist, können viele Jahre vergehen. Nachgefüllt wird der Teich durch Regenwasser vom Dach unserer Scheune, das durch ein unterirdisches Rohr hier eingeleitet wird.",
-        "subject": "Ökologische Landschaftsgestaltung",
-        "text": "Ursprünglich befand sich an dieser Stelle eine vermutlich durch Abgrabung entstandene Senke. Durch Ausbaggern des lehmigen Untergrunds und Abdichten mit einer dicken Tonschicht konnte ein naturnaher Teich geschaffen werden, wie er in ähnlicher Form im Berliner Raum als eiszeitlich entstandener Pfuhl häuﬁg zu ﬁnden ist. Libellen, Bienen und andere Insekten haben hier ihre Tränke und insektenfressende Tiere wie Fledermäuse, Lurche und Vögel ﬁnden so ihre Nahrung.",
-        "title_en": "Pond",
         "subject_en": "Ecological Landscaping",
-        "title": "Naturnaher Teich (66 W.)",
+        "website": "https://www.domaene-dahlem.de/einblicke-in-das-leben-der-stadtgreife-auf-der-domaene/",
+        "subject": "Ökologische Landschaftsgestaltung",
+        "category_en": "Wildlife",
+        "funfact_en": "It can take many years for the clay layer to swell fully and become watertight. The pond is replenished with rainwater from the roof of our barn, which is conveyed here through an underground pipe.",
         "text_en": "Originally, there was a depression at this location, presumably created by excavation. By dredging the clayey subsoil and sealing it with a thick layer of clay, a near-natural pond was created, similar to the ice-age–formed ponds (Pfuhle) commonly found in the Berlin region. Dragonflies, bees, and other insects use it as a watering place, and insect-eating animals such as bats, amphibians, and birds find their food here.",
-        "website": "https://www.domaene-dahlem.de/einblicke-in-das-leben-der-stadtgreife-auf-der-domaene/"
+        "title_en": "Pond",
+        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2025/06/DSC4634-scaled-e1750942073148-1166x583-c-default.jpg",
+        "category": "Wildtiere & -pflanzen"
       },
-      "geometry": {
-        "coordinates": [
-          null,
-          null
-        ],
-        "type": "Point"
-      }
+      "type": "Feature"
     },
     {
-      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.290091680397698,
+          52.462245403892176
+        ]
+      },
       "properties": {
-        "category_en": "Agriculture",
+        "title": "Rund um die Kartoffel (340 W.)",
+        "text": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.  \n\nDuis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.  \n\nUt wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.  \n\nNam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
         "photos": [
           {
             "url": "https://www.domaene-dahlem.de/wp-content/uploads/2023/10/DD00-1572VS.jpg"
           }
         ],
-        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2023/10/DD00-1572VS.jpg",
-        "funfact_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
-        "category": "Landwirtschaft",
         "funfact": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
-        "subject": "Ökologische Landwirtschaft",
-        "text": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.  \n\nDuis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.  \n\nUt wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.  \n\nNam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-        "title_en": "All about potatoes",
         "subject_en": "Organic agriculture",
-        "title": "Rund um die Kartoffel (340 W.)",
+        "website": "https://www.domaene-dahlem.de/ausgestellt-3/",
+        "subject": "Ökologische Landwirtschaft",
+        "category_en": "Agriculture",
+        "funfact_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
         "text_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.  \n\nDuis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.  \n\nUt wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.  \n\nNam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-        "website": "https://www.domaene-dahlem.de/ausgestellt-3/"
+        "title_en": "All about potatoes",
+        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2023/10/DD00-1572VS.jpg",
+        "category": "Landwirtschaft"
       },
-      "geometry": {
-        "coordinates": [
-          null,
-          null
-        ],
-        "type": "Point"
-      }
+      "type": "Feature"
     },
     {
-      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.290513009406256,
+          52.46309255020898
+        ]
+      },
       "properties": {
-        "category_en": "History",
+        "title": "Flakgeschütze auf der Domäne Dahlem (140 W.)",
+        "text": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. \nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. \n\nAt vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
         "photos": [
           {
             "url": "https://www.domaene-dahlem.de/wp-content/uploads/2023/09/DD99-058VS-e1707841018865-1620x810-c-default.jpg"
           }
         ],
-        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2023/09/DD99-058VS-e1707841018865-1620x810-c-default.jpg",
-        "funfact_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
-        "category": "Historie",
         "funfact": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
-        "subject": "Nationalsozialismus",
-        "text": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. \n\nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. \n\nAt vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-        "title_en": "Anti-aircraft guns on the site",
         "subject_en": "Nazism",
-        "title": "Flakgeschütze auf der Domäne Dahlem (140 W.)",
-        "text_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. \n\nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. \n\nAt vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-        "website": "https://www.domaene-dahlem.de/ausgestellt-9/"
+        "website": "https://www.domaene-dahlem.de/ausgestellt-9/",
+        "subject": "Nationalsozialismus",
+        "category_en": "History",
+        "funfact_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
+        "text_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. \nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. \n\nAt vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+        "title_en": "Anti-aircraft guns on the site",
+        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2023/09/DD99-058VS-e1707841018865-1620x810-c-default.jpg",
+        "category": "Historie"
       },
-      "geometry": {
-        "coordinates": [
-          null,
-          null
-        ],
-        "type": "Point"
-      }
+      "type": "Feature"
     },
     {
-      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.288898850167715,
+          52.46363629732873
+        ]
+      },
       "properties": {
-        "category_en": "History",
+        "title": "Radiosender AFN (54 W.)",
+        "text": "Nach dem Ende des Zweiten Weltkriegs war die US-amerikanische Armee dauerhaft in Deutschland stationiert. Ihr Hauptquartier befand sich im Berliner Stadtteil Dahlem. Der bereits während des Krieges gegründete Militärrundfunksender AFN (American Forces Network) richtete sich ebenfalls in Dahlem ein. Hierfür wurde 1948 ein Gebäude errichtet, das als Wartungsgebäude für den Sendemast genutzt werden konnte.",
         "photos": [
           {
             "url": "https://www.domaene-dahlem.de/wp-content/uploads/2023/09/KS-6-BZ_1034B-1.jpg"
           }
         ],
-        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2023/09/KS-6-BZ_1034B-1.jpg",
-        "funfact_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
-        "category": "Historie",
         "funfact": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
-        "subject": "Kalter Krieg",
-        "text": "Nach dem Ende des Zweiten Weltkriegs war die US-amerikanische Armee dauerhaft in Deutschland stationiert. Ihr Hauptquartier befand sich im Berliner Stadtteil Dahlem. Der bereits während des Krieges gegründete Militärrundfunksender AFN (American Forces Network) richtete sich ebenfalls in Dahlem ein. Hierfür wurde 1948 ein Gebäude errichtet, das als Wartungsgebäude für den Sendemast genutzt werden konnte.",
-        "title_en": "Radio Broadcasting AFN",
         "subject_en": "Cold War",
-        "title": "Radiosender AFN (54 W.)",
+        "website": "https://www.domaene-dahlem.de/?s=AFN",
+        "subject": "Kalter Krieg",
+        "category_en": "History",
+        "funfact_en": "English Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam",
         "text_en": "After the end of the Second World War, the United States Army was permanently stationed in Germany. Its headquarters were located in the Berlin district of Dahlem. The military radio broadcaster AFN (American Forces Network), which had already been founded during the war, also established itself in Dahlem. For this purpose, a building was constructed in 1948 that could be used as a maintenance facility for the transmission mast.",
-        "website": "https://www.domaene-dahlem.de/?s=AFN"
+        "title_en": "Radio Broadcasting AFN",
+        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2023/09/KS-6-BZ_1034B-1.jpg",
+        "category": "Historie"
       },
-      "geometry": {
-        "coordinates": [
-          null,
-          null
-        ],
-        "type": "Point"
-      }
+      "type": "Feature"
     },
     {
-      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.289059163596416,
+          52.46217532806008
+        ]
+      },
       "properties": {
-        "category_en": "Wildlife",
+        "title": "Nisthilfe für Wildbienen",
+        "text": "Nicht alle Wildbiene legen ihre Brutröhren selbst an. Viele bauen ihre Brutzellen in Bohrgängen, die normalerweise von Käfern zurückgelassen wurden. \n\nDa solche natürlichen Nistplätze in unserer ausgeräumten Kulturlandschaft immer seltener werden, ist das Aufstellen von Insekten-Nisthilfen ein Beitrag zum Artenschutz.",
         "photos": [
           {
             "url": "https://live.staticflickr.com/7211/7209363762_a489ed9539_z.jpg"
           }
         ],
-        "image": "https://live.staticflickr.com/7211/7209363762_a489ed9539_z.jpg",
-        "funfact_en": "Sorry, still missing!",
-        "category": "Wildtiere & -pflanzen",
         "funfact": "Solche Insekten-Nisthilfen lassen sich leicht selber bauen. Sandbienen, Wollbienen und die Rote Mauerbiene sind einige Wildbienenarten, mit deren Besuch wir hier in unserer Region rechnen können.",
-        "subject": "Biodiversität",
-        "text": "Nicht alle Wildbiene legen ihre Brutröhren selbst an. Viele bauen ihre Brutzellen in Bohrgängen, die normalerweise von Käfern zurückgelassen wurden. \n\nDa solche natürlichen Nistplätze in unserer ausgeräumten Kulturlandschaft immer seltener werden, ist das Aufstellen von Insekten-Nisthilfen ein Beitrag zum Artenschutz.",
-        "title_en": "Nesting Aid for Wild Bees",
         "subject_en": "Biodiversity",
-        "title": "Nisthilfe für Wildbienen",
+        "website": "https://www.domaene-dahlem.de/wildbienen-vortrag/",
+        "subject": "Biodiversität",
+        "category_en": "Wildlife",
+        "funfact_en": "Sorry, still missing!",
         "text_en": "Sorry, still missing!",
-        "website": "https://www.domaene-dahlem.de/wildbienen-vortrag/"
+        "title_en": "Nesting Aid for Wild Bees",
+        "image": "https://live.staticflickr.com/7211/7209363762_a489ed9539_z.jpg",
+        "category": "Wildtiere & -pflanzen"
       },
-      "geometry": {
-        "coordinates": [
-          null,
-          null
-        ],
-        "type": "Point"
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "category_en": "History",
-        "photos": [
-          {
-            "url": "https://www.domaene-dahlem.de/wp-content/uploads/2024/06/DD99-1914VS.jpg"
-          }
-        ],
-        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2024/06/DD99-1914VS.jpg",
-        "funfact_en": "The term Herrenhaus originally refers to the seat of patriarchal manorial rule.\n Currently, a renaming of the Herrenhaus to the more neutral term Gutshaus is being considered in order to reflect a critical perspective on historical structures of power and domination.",
-        "category": "Historie",
-        "funfact": "Herrenhaus? Gutshaus!\nDer Begriff Herrenhaus bezeichnet ursprünglich den Sitz der patriarchalen Gutsherrschaft. Aktuell wird über eine Umbenennung des Herrenhauses in die neutrale Bezeichnung Gutshaus nachgedacht, um eine kritische Sicht auf historische Macht- und Herrschaftsstrukturen zu reflektieren.",
-        "subject": "Geschichte",
-        "text": "Das sogenannte Herrenhaus ist das älteste noch erhaltene Wohnhaus Berlins. \nDie Grundmauern entstanden 1560, seitdem wurde das Haus mehrfach umgebaut und erweitert. Auch hatte es im Verlauf verschiedene Funktionen. Heute beinhaltet es das Museum mit wechselnden Sonderausstellungen und einige Verwaltungsräume der Domäne Dahlem.",
-        "title_en": "Buildings",
-        "subject_en": "History",
-        "title": "Gebäude",
-        "text_en": "The so-called Herrenhaus is the oldest residential building in Berlin that has been preserved to this day. \nThe foundations were laid in 1560, and since then the house has been rebuilt and extended several times. It has also served various functions over the course of its history. Today, it houses the museum with changing temporary exhibitions as well as several administrative offices of the Domäne Dahlem.",
-        "website": "https://www.domaene-dahlem.de/ausgestellt-10/"
-      },
-      "geometry": {
-        "coordinates": [
-          null,
-          null
-        ],
-        "type": "Point"
-      }
+      "type": "Feature"
     }
-  ],
-  "type": "FeatureCollection"
+  ]
 }

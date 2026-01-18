@@ -162,33 +162,6 @@
           52.45841135704555
         ]
       }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "ID": "7",
-        "latitude": "52.458713688464414 ",
-        "longitude": "13.289486842186237",
-        "category": "Historie",
-        "category_en": "History",
-        "subject": "Geschichte",
-        "subject_en": "History",
-        "title": "Vom Pferdestall zum Museum",
-        "title_en": "Culinarium",
-        "text": "Das Gebäude entstand 1830 als eingeschossiger Pferdestall mit einem angrenzenden zweigeschossigen Getreidespeicher. Der Pferdestall wurde zwischen 1850 und 1893 umgebaut und erweitert. Heute befindet sich neben dem Pferdestall das Museum Culinarium in dem Gebäude.",
-        "text_en": "Sorry, still missing!",
-        "funfact": "Das heutige Museumsgebäude Culinarium war ursprünglich ein Pferdestall. Es ist der zweitälteste Bau auf dem Gelände und somit ein wichtiger Ort voller Geschichte. ",
-        "funfact_en": "Sorry, still missing!",
-        "image": "https://www.domaene-dahlem.de/wp-content/uploads/2024/02/IMG_7485-1620x810-c-default.jpg",
-        "link": "https://www.domaene-dahlem.de/ausgestellt-11/"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          13.289486842186237,
-          52.458713688464414
-        ]
-      }
     }
   ]
 }

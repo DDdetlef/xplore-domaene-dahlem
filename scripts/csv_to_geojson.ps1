@@ -37,6 +37,46 @@ function SplitList {
   return ($s -split '[;,]') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
 }
 
+# Try to parse a coordinate string into a double with several heuristics
+function TryParseNumber {
+  param([string]$s, [ref]$result)
+  if ($null -eq $s) { return $false }
+  $x = "$s".Trim()
+  if ($x.StartsWith("'")) { $x = $x.Substring(1) }
+  $x = $x -replace '\s',''
+  # First, try invariant culture parse (dot as decimal)
+  try {
+    $result.Value = [double]::Parse($x, [System.Globalization.CultureInfo]::InvariantCulture)
+    return $true
+  } catch {}
+
+  # Heuristic: if both '.' and ',' present, assume '.' thousands and ',' decimal
+  $y = $x
+  if ($y -match '\.' -and $y -match ',') {
+    $y = $y -replace '\.',''
+    $y = $y -replace ',','.'
+  } else {
+    # If only comma present, treat it as decimal separator
+    if ($y -match ',') { $y = $y -replace ',','.' }
+    # Remove any remaining non-numeric chars except dot, signs and exponent markers
+    $y = $y -replace '[^0-9\.\-+eE]',''
+  }
+  try {
+    $result.Value = [double]::Parse($y, [System.Globalization.CultureInfo]::InvariantCulture)
+    return $true
+  } catch {}
+
+  # Final fallback: strip a trailing ',00' or similar and try again
+  $z = $x -replace ',00$',''
+  $z = $z -replace '[^0-9\.\-+eE]',''
+  try {
+    $result.Value = [double]::Parse($z, [System.Globalization.CultureInfo]::InvariantCulture)
+    return $true
+  } catch {}
+
+  return $false
+}
+
 $features = @()
 
 foreach ($row in $rows) {
@@ -48,8 +88,12 @@ foreach ($row in $rows) {
     $lonS = $row.latitude
   }
   if (-not $latS -or -not $lonS) { continue }
-  try { $lat = [double]::Parse($latS, [System.Globalization.CultureInfo]::InvariantCulture) } catch { continue }
-  try { $lon = [double]::Parse($lonS, [System.Globalization.CultureInfo]::InvariantCulture) } catch { continue }
+  $latRef = 0.0
+  $lonRef = 0.0
+  if (-not (TryParseNumber $latS ([ref]$latRef))) { continue }
+  if (-not (TryParseNumber $lonS ([ref]$lonRef))) { continue }
+  $lat = $latRef.Value
+  $lon = $lonRef.Value
   # Heuristic swap for Berlin-area data if columns are mislabeled
   if ($lat -lt 30 -and $lon -gt 30) { $tmp = $lat; $lat = $lon; $lon = $tmp }
 

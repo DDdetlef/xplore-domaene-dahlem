@@ -5,8 +5,8 @@
       "type": "Feature",
       "properties": {
         "ID": "1",
-        "latitude": "52.462.091.399.086.800",
-        "longitude": "13.288.840.160.645.300",
+        "latitude": "52.462091399086816",
+        "longitude": "13.288840160645377",
         "category": "Wildtiere & -pflanzen",
         "category_en": "Wildlife",
         "subject": "Ökologische Landschaftsgestaltung",
@@ -23,8 +23,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          13.2888401606453,
-          52.4620913990868
+          13.288840160645377,
+          52.462091399086816
         ]
       }
     },
@@ -32,8 +32,8 @@
       "type": "Feature",
       "properties": {
         "ID": "2",
-        "latitude": "52.462.245.403.892.100",
-        "longitude": "13.290.091.680.397.600",
+        "latitude": "52.462245403892176",
+        "longitude": "13.290091680397698",
         "category": "Landwirtschaft",
         "category_en": "Agriculture",
         "subject": "Ökologische Landwirtschaft",
@@ -50,8 +50,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          13.2900916803976,
-          52.4622454038921
+          13.290091680397698,
+          52.462245403892176
         ]
       }
     },
@@ -59,8 +59,8 @@
       "type": "Feature",
       "properties": {
         "ID": "3",
-        "latitude": "5.246.309.255.020.890",
-        "longitude": "13.290.513.009.406.200",
+        "latitude": "52.46309255020898",
+        "longitude": "13.290513009406256",
         "category": "Historie",
         "category_en": "History",
         "subject": "Nationalsozialismus",
@@ -77,8 +77,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          13.2905130094062,
-          52.4630925502089
+          13.290513009406256,
+          52.46309255020898
         ]
       }
     },
@@ -86,8 +86,8 @@
       "type": "Feature",
       "properties": {
         "ID": "4",
-        "latitude": "5.246.363.629.732.870",
-        "longitude": "13.288.898.850.167.700",
+        "latitude": "52.46363629732873",
+        "longitude": "13.288898850167715",
         "category": "Historie",
         "category_en": "History",
         "subject": "Kalter Krieg",
@@ -104,8 +104,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          13.2888988501677,
-          52.4636362973287
+          13.288898850167715,
+          52.46363629732873
         ]
       }
     },
@@ -113,8 +113,8 @@
       "type": "Feature",
       "properties": {
         "ID": "5",
-        "latitude": "5.246.217.532.806.000",
-        "longitude": "13.289.059.163.596.400",
+        "latitude": "52.46217532806008",
+        "longitude": "13.289059163596416",
         "category": "Wildtiere & -pflanzen",
         "category_en": "Wildlife",
         "subject": "Biodiversität",
@@ -131,8 +131,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          13.2890591635964,
-          52.46217532806
+          13.289059163596416,
+          52.46217532806008
         ]
       }
     },
@@ -140,14 +140,14 @@
       "type": "Feature",
       "properties": {
         "ID": "6",
-        "latitude": "5.245.836.615.763.840,00",
-        "longitude": "13.288.987.768.858.700",
+        "latitude": "52.45841135704555",
+        "longitude": "13.28895698455517",
         "category": "Historie",
         "category_en": "History",
         "subject": "Geschichte",
         "subject_en": "History",
-        "title": "Herrenhaus",
-        "title_en": "Manor House",
+        "title": "Gebäude",
+        "title_en": "Buildings",
         "text": "Das sogenannte Herrenhaus ist das älteste noch erhaltene Wohnhaus Berlins. \nDie Grundmauern entstanden 1560, seitdem wurde das Haus mehrfach umgebaut und erweitert. Auch hatte es im Verlauf verschiedene Funktionen. Heute beinhaltet es das Museum mit wechselnden Sonderausstellungen und einige Verwaltungsräume der Domäne Dahlem.",
         "text_en": "The so-called Herrenhaus is the oldest residential building in Berlin that has been preserved to this day. \nThe foundations were laid in 1560, and since then the house has been rebuilt and extended several times. It has also served various functions over the course of its history. Today, it houses the museum with changing temporary exhibitions as well as several administrative offices of the Domäne Dahlem.",
         "funfact": "Herrenhaus? Gutshaus!\nDer Begriff Herrenhaus bezeichnet ursprünglich den Sitz der patriarchalen Gutsherrschaft. Aktuell wird über eine Umbenennung des Herrenhauses in die neutrale Bezeichnung Gutshaus nachgedacht, um eine kritische Sicht auf historische Macht- und Herrschaftsstrukturen zu reflektieren. ",
@@ -158,8 +158,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          13.2889877688587,
-          5245836615763840.0
+          13.28895698455517,
+          52.45841135704555
         ]
       }
     }

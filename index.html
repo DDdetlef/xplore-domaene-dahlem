@@ -88,22 +88,6 @@
   <!-- Marker clustering -->
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-  <!-- Global error hook: surface JS errors to #boot-log for Simple Browser debugging -->
-  <script>
-    (function(){
-      function write(msg){
-        try{
-          var el = document.getElementById('boot-log');
-          if(el){ el.style.display = 'block'; el.textContent = String(msg).slice(0,1000); }
-          console.error('BootLog:', msg);
-        }catch(e){}
-      }
-      window.addEventListener('error', function(e){ write('Error: '+(e && e.message) + ' at ' + (e && e.filename) + ':' + (e && e.lineno)); });
-      window.addEventListener('unhandledrejection', function(e){ write('PromiseRejection: '+ (e && e.reason && e.reason.stack) || String(e)); });
-      window.onerror = function(msg, src, lineno){ write('onerror: '+msg+' @'+src+':'+lineno); };
-    })();
-  </script>
-
   <script src="js/main.js?v=init1" defer></script>
 </body>
 </html>
